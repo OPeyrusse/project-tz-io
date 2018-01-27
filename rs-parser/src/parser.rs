@@ -1,7 +1,6 @@
-use nom::{is_alphanumeric, be_i32};
+// use nom::{is_alphanumeric, be_i32};
 // use nom::types::CompleteByteSlice;
 use nom::IResult;
-use std::result::Result;
 
 use std::str;
 // use std::collections::HashMap;
@@ -10,10 +9,20 @@ fn take_char(c: u8, i: u8) -> bool {
   c == i
 }
 
-named!(a_s, take_while!(apply!(take_char, b'a')));
-named!(b_s, take_while!(apply!(take_char, b'b')));
-named!(a_and_b_s<&[u8], (&[u8], &[u8])>, tuple!(a_s, b_s));
-named!(seq_s<&[u8], Vec<(&[u8], &[u8])> >,
+named!(a_s<&[u8], &str>,
+  map_res!(
+    take_while!(apply!(take_char, b'a')),
+    str::from_utf8
+  )
+);
+named!(b_s<&[u8], &str>,
+  map_res!(
+    take_while!(apply!(take_char, b'b')),
+    str::from_utf8
+  )
+);
+named!(a_and_b_s<&[u8], (&str, &str)>, tuple!(a_s, b_s));
+named!(seq_s<&[u8], Vec<(&str, &str)> >,
   many0!(a_and_b_s)
 );
 
@@ -40,8 +49,8 @@ fn test_parse_seq_s() {
     IResult::Done(
       &b""[..],
       vec![
-        (&b"aa"[..], &b"bb"[..]),
-        (&b"a"[..], &b""[..])
+        ("aa", "bb"),
+        ("a", "")
       ]
     )
   );
@@ -54,7 +63,7 @@ fn test_parse_a_s() {
   let res = a_s(input);
   assert_eq!(
     res,
-    IResult::Done(&b"bba"[..], &b"aaaa"[..])
+    IResult::Done(&b"bba"[..], "aaaa")
   );
 }
 
@@ -65,7 +74,7 @@ fn test_parse_b_s() {
   let res = b_s(input);
   assert_eq!(
     res,
-    IResult::Done(&b"a"[..], &b"bb"[..])
+    IResult::Done(&b"a"[..], "bb")
   );
 }
 
@@ -78,7 +87,7 @@ fn test_parse_a_and_b_s() {
     res,
     IResult::Done(
       &b"a"[..],
-      (&b"aa"[..], &b"bb"[..])
+      ("aa", "bb")
     )
   );
 }
