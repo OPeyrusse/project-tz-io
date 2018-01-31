@@ -13,6 +13,7 @@ pub enum Node<'a> {
     Node(&'a str)
 }
 
+
 impl<'a> fmt::Debug for Node<'a> {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
@@ -21,6 +22,12 @@ impl<'a> fmt::Debug for Node<'a> {
       &Node::Node(id) => write!(f, "Node#{}", id)
     }
   }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Port<'a> {
+	node: Node<'a>,
+	port: u32
 }
 
 named!(input_node<&RawData, Node>,
@@ -43,25 +50,25 @@ named!(pub node_ref<&RawData, Node>,
   alt!(input_node | output_node | node_id)
 );
 
-named!(pub port_ref<&RawData, (Node, u32)>,
+fn to_int(v: &RawData) -> Result<u32, i8> {
+	str::from_utf8(v).or(Err(-1))
+		.and_then(|i| i.parse::<u32>().or(Err(-2)))
+}
+
+named!(pub port_ref<&RawData, Port>,
   do_parse!(
     id: node_ref >>
     tag!(":") >>
-    port: map_res!(
-			digit,
-			|v| str::from_utf8(v).map(|i| i.parse::<u32>().unwrap())
-		) >>
-    (id, port)
+    port: map_res!(digit, to_int) >>
+    (Port {node: id, port: port})
   )
 );
 
 named!(pub node_header<&RawData, Node>,
   do_parse!(
-    opt!(space) >>
     tag!("Node") >>
     opt!(space) >>
     id: node_id >>
-    opt!(space) >>
     (id)
   )
 );
@@ -111,7 +118,7 @@ mod tests {
 
 	#[test]
 	fn test_parse_node_header() {
-		let input = b" Node #a1 ";
+		let input = b"Node #a1";
 
 		let res = node_header(input);
 		assert_eq!(
@@ -153,6 +160,6 @@ mod tests {
 	fn test_parse_port_ref() {
 		let res = port_ref(b"IN:13");
 		println!("{:?}", res);
-		assert_eq!(res.unwrap().1, (Node::In, 13u32));
+		assert_eq!(res.unwrap().1, Port{ node: Node::In, port: 13u32});
 	}
 }
