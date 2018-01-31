@@ -1,10 +1,10 @@
 use std::str;
 use std::fmt;
 
-use nom::{space, is_alphanumeric, digit};
+use nom::{space, is_alphanumeric};
 use nom::IResult;
 
-use parser::common::RawData;
+use parser::common::{RawData, be_uint};
 
 #[derive(PartialEq)]
 pub enum Node<'a> {
@@ -50,16 +50,11 @@ named!(pub node_ref<&RawData, Node>,
   alt!(input_node | output_node | node_id)
 );
 
-fn to_int(v: &RawData) -> Result<u32, i8> {
-	str::from_utf8(v).or(Err(-1))
-		.and_then(|i| i.parse::<u32>().or(Err(-2)))
-}
-
 named!(pub port_ref<&RawData, Port>,
   do_parse!(
     id: node_ref >>
     tag!(":") >>
-    port: map_res!(digit, to_int) >>
+    port: be_uint >>
     (Port {node: id, port: port})
   )
 );

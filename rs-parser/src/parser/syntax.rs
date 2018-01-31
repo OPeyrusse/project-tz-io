@@ -1,15 +1,26 @@
 use nom::{space, newline};
 use nom::IResult;
 
-use std::str;
+use parser::common::{RawData, be_uint};
+use parser::address::{Node, Port, node_header, port_ref};
 
-use parser::common::RawData;
-use parser::address;
-use parser::address::{node_header};
+struct InputMapping<'a> {
+	from: Port<'a>,
+	to: u32
+}
 
 named!(node_line<&RawData, &RawData>, take_while!(call!(|c| c == b'=')));
 named!(code_line<&RawData, &RawData>, take_while!(call!(|c| c == b'-')));
-named!(pub node_block<&RawData, address::Node>,
+named!(input_item<&RawData, InputMapping>,
+	do_parse!(
+		opt!(space) >>
+		port: port_ref >>
+		space >> tag!("->") >> space >>
+		input: be_uint >>
+		(InputMapping { from: port, to: input })
+	)
+);
+named!(pub node_block<&RawData, Node>,
 	do_parse!(
 		opt!(space) >>
 		node: node_header >>
@@ -66,7 +77,7 @@ mod tests {
 			res,
 			IResult::Done(
 				&b""[..],
-				address::Node::Node(&"123")
+				Node::Node(&"123")
 			)
 		);
 	}
