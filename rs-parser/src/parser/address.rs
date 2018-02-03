@@ -2,7 +2,6 @@ use std::str;
 use std::fmt;
 
 use nom::{space, is_alphanumeric};
-use nom::IResult;
 
 use parser::common::{RawData, be_uint};
 
@@ -26,8 +25,8 @@ impl<'a> fmt::Debug for Node<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct Port<'a> {
-	node: Node<'a>,
-	port: u32
+	pub node: Node<'a>,
+	pub port: u32
 }
 
 named!(input_node<&RawData, Node>,
@@ -71,44 +70,27 @@ named!(pub node_header<&RawData, Node>,
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use parser::common::{assert_result, assert_full_result};
 
 	#[test]
 	fn test_parse_input_node() {
 		let input = b"IN aa";
 		let res = input_node(input);
-		assert_eq!(
-			res,
-			IResult::Done(
-				&b" aa"[..],
-				Node::In
-			)
-		);
+		assert_result(res, Node::In, b" aa");
 	}
 
 	#[test]
 	fn test_parse_output_node() {
 		let input = b"OUT aa";
 		let res = output_node(input);
-		assert_eq!(
-			res,
-			IResult::Done(
-				&b" aa"[..],
-				Node::Out
-			)
-		);
+		assert_result(res, Node::Out, b" aa");
 	}
 
 	#[test]
 	fn test_parse_node_id() {
 		let input = b"#abc42";
 		let res = node_id(input);
-		assert_eq!(
-			res,
-			IResult::Done(
-				&b""[..],
-				Node::Node(&"abc42")
-			)
-		);
+		assert_full_result(res, Node::Node(&"abc42"));
 	}
 
 	#[test]
@@ -116,45 +98,24 @@ mod tests {
 		let input = b"Node #a1";
 
 		let res = node_header(input);
-		assert_eq!(
-			res,
-			IResult::Done(
-				&b""[..],
-				Node::Node(&"a1"))
-		);
+		assert_full_result(res, Node::Node(&"a1"));
 	}
 
 	#[test]
 	fn test_parse_node_ref() {
 		let res_node = node_ref(b"#ref");
-		assert_eq!(
-			res_node,
-			IResult::Done(
-				&b""[..],
-				Node::Node(&"ref"))
-		);
+		assert_full_result(res_node, Node::Node(&"ref"));
 
 		let res_in = node_ref(b"IN");
-		assert_eq!(
-			res_in,
-			IResult::Done(
-				&b""[..],
-				Node::In)
-		);
+		assert_full_result(res_in, Node::In);
 
 		let res_out = node_ref(b"OUT");
-		assert_eq!(
-			res_out,
-			IResult::Done(
-				&b""[..],
-				Node::Out)
-		);
+		assert_full_result(res_out, Node::Out);
 	}
 
 	#[test]
 	fn test_parse_port_ref() {
 		let res = port_ref(b"IN:13");
-		println!("{:?}", res);
-		assert_eq!(res.unwrap().1, Port{ node: Node::In, port: 13u32});
+		assert_full_result(res, Port { node: Node::In, port: 13u32 });
 	}
 }
