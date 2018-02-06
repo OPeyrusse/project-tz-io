@@ -8,6 +8,11 @@ struct InputMapping<'a> {
 	from: Port<'a>,
 	to: u32
 }
+#[derive(Debug, PartialEq)]
+struct OutputMapping<'a> {
+	from: u32,
+	to: Port<'a>
+}
 
 // Syntax lines
 named!(node_line<&RawData, &RawData>, take_while!(call!(|c| c == b'=')));
@@ -23,24 +28,35 @@ named!(input_item<&RawData, InputMapping>,
 		(InputMapping { from: port, to: input })
 	)
 );
-// named!(inputs<&RawData, Vec<&InputMapping> >,
-// 	map_res!(
-// 		do_parse!(
-// 			first: input_item >>
-// 			rest: many0!(
-// 				do_parse!(
-// 					space >> tag!(",") >> space >>
-// 					item: input_item >>
-// 					(item)
-// 				)
-// 			) >>
-// 			(first, rest)
-// 		),
-// 	|(first, rest)| {
-// 		rest.insert(0, first);
-// 		rest
-// 	}
-// );
+named!(inputs<&RawData, Vec<InputMapping> >,
+	separated_list_complete!(
+		do_parse!(
+			opt!(space) >> tag!(",") >> space >>
+			()
+		),
+		input_item
+	)
+);
+
+// List of outputs
+named!(output_item<&RawData, OutputMapping>,
+	do_parse!(
+		opt!(space) >>
+		input: be_uint >>
+		space >> tag!("->") >> space >>
+		port: port_ref >>
+		(OutputMapping { from: input, to: port })
+	)
+);
+named!(outputs<&RawData, Vec<OutputMapping> >,
+	separated_list_complete!(
+		do_parse!(
+			opt!(space) >> tag!(",") >> space >>
+			()
+		),
+		output_item
+	)
+);
 
 named!(pub node_block<&RawData, Node>,
 	do_parse!(
@@ -94,6 +110,63 @@ mod tests {
 				from: Port { node: Node::Node(&"node"), port: 32u32 },
 				to: 1u32
 			}
+		);
+	}
+
+	#[test]
+	fn test_parse_inputs() {
+		let res = inputs(b"OUT:1 -> 2, #abc:3 -> 4");
+		assert_full_result(
+			res,
+			vec![
+				InputMapping {
+					from: Port { node: Node::Out, port: 1u32 },
+					to: 2u32
+				},
+				InputMapping {
+					from: Port { node: Node::Node(&"abc"), port: 3u32 },
+					to: 4u32
+				}
+			]
+		);
+	}
+
+	#[test]
+	fn test_parse_output_item() {
+		let res_in = output_item(b"1 -> OUT:3");
+		assert_full_result(
+			res_in,
+			OutputMapping {
+				from: 1u32,
+				to: Port { node: Node::Out, port: 3u32 }
+			}
+		);
+
+		let res_node = output_item(b"1 -> #node:32");
+		assert_full_result(
+			res_node,
+			OutputMapping {
+				from: 1u32,
+				to: Port { node: Node::Node(&"node"), port: 32u32 }
+			}
+		);
+	}
+
+	#[test]
+	fn test_parse_outputs() {
+		let res = outputs(b"1 -> OUT:2, 3 -> #abc:4");
+		assert_full_result(
+			res,
+			vec![
+				OutputMapping {
+					from: 1u32,
+					to: Port { node: Node::Out, port: 2u32 }
+				},
+				OutputMapping {
+					from: 3u32,
+					to: Port { node: Node::Node(&"abc"), port: 4u32 }
+				}
+			]
 		);
 	}
 
