@@ -1,4 +1,4 @@
-use nom::{space, newline};
+use nom::{space, newline as nl};
 
 use parser::common::{RawData, be_uint};
 use parser::address::{Node, Port, node_header, port_ref};
@@ -62,11 +62,13 @@ named!(pub node_block<&RawData, Node>,
 	do_parse!(
 		opt!(space) >>
 		node: node_header >>
-		opt!(space) >> newline >>
-		node_line >> newline >>
-		code_line >> newline >>
-		code_line >> newline >>
-		node_line >> newline >>
+		opt!(space) >> nl >>
+		node_line >> nl >>
+		inputs: inputs >> nl >>
+		code_line >> nl >>
+		code_line >> nl >>
+		outputs: outputs >> nl >>
+		node_line >> nl >>
 		(node)
 	)
 );
@@ -115,9 +117,20 @@ mod tests {
 
 	#[test]
 	fn test_parse_inputs() {
-		let res = inputs(b"OUT:1 -> 2, #abc:3 -> 4");
+		let res_one = inputs(b"#n:7 -> 14");
 		assert_full_result(
-			res,
+			res_one,
+			vec![
+				InputMapping {
+					from: Port { node: Node::Node(&"n"), port: 7u32 },
+					to: 14u32,
+				}
+			]
+		);
+
+		let res_many = inputs(b"OUT:1 -> 2, #abc:3 -> 4");
+		assert_full_result(
+			res_many,
 			vec![
 				InputMapping {
 					from: Port { node: Node::Out, port: 1u32 },
@@ -154,9 +167,20 @@ mod tests {
 
 	#[test]
 	fn test_parse_outputs() {
-		let res = outputs(b"1 -> OUT:2, 3 -> #abc:4");
+		let res_one = outputs(b"3 -> #n:7");
 		assert_full_result(
-			res,
+			res_one,
+			vec![
+				OutputMapping {
+					from: 3,
+					to: Port { node: Node::Node(&"n"), port: 7u32}
+				}
+			]
+		);
+
+		let res_many = outputs(b"1 -> OUT:2, 3 -> #abc:4");
+		assert_full_result(
+			res_many,
 			vec![
 				OutputMapping {
 					from: 1u32,
@@ -174,8 +198,10 @@ mod tests {
 	fn test_parse_node_block() {
 		let input = b"  Node #123
 ==========
+IN:1 -> 1
 --
 ---------
+1 -> OUT:1
 =======
 ";
 
