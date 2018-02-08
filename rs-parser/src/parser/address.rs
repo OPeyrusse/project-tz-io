@@ -70,7 +70,7 @@ named!(pub node_header<&RawData, Node>,
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use parser::common::{assert_result, assert_full_result};
+	use parser::common::tests::{assert_result, assert_full_result};
 
 	#[test]
 	fn test_parse_input_node() {
