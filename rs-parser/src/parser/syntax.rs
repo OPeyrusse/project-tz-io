@@ -2,7 +2,7 @@ use nom::{space};
 
 use parser::common::{RawData, be_uint, ospace, eol};
 use parser::address::{Node, Port, node_header, port_ref};
-use parser::instructions::{parse_instruction};
+use parser::instruction::{parse_instruction};
 
 #[derive(Debug, PartialEq)]
 struct InputMapping<'a> {

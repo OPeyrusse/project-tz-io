@@ -1,0 +1,126 @@
+use nom::space;
+
+use parser::common::{RawData, ospace};
+use parser::instruction::{ValuePointer, Operation};
+use parser::instruction::base::*;
+
+named!(mov_from_in<&RawData, Operation>,
+  do_parse!(
+    tag!("MOV") >> space >>
+    from: input_port >>
+    ospace >> tag!(",") >> ospace >>
+    to: alt!(acc_pointer | output_port) >>
+    (Operation::MOV(from, to))
+  )
+);
+named!(mov_to_out<&RawData, Operation>,
+  do_parse!(
+    tag!("MOV") >> space >>
+    from: alt!(acc_pointer | value_pointer) >>
+    ospace >> tag!(",") >> ospace >>
+    to: output_port >>
+    (Operation::MOV(from, to))
+  )
+);
+named!(mov_accs<&RawData, Operation>,
+  do_parse!(
+    tag!("MOV") >> space >>
+    from: alt!(value_pointer | acc_pointer) >>
+    ospace >> tag!(",") >> ospace >>
+    to: acc_pointer >>
+    (Operation::MOV(from, to))
+  )
+);
+named!(pub mov_operation<&RawData, Operation>,
+  alt!(mov_from_in | mov_to_out | mov_accs)
+);
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use parser::common::tests::assert_full_result;
+
+  #[test]
+  fn test_parse_mov_in_to_out() {
+    let res = mov_operation(b"MOV 1>, >2");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::PORT(1),
+        ValuePointer::PORT(2)
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_in_to_acc() {
+    let res = mov_operation(b"MOV 1>, ACC2");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::PORT(1),
+        ValuePointer::ACC(2)
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_value_to_out() {
+    let res = mov_operation(b"MOV 12, >3");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::VALUE(12),
+        ValuePointer::PORT(3)
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_acc_to_out() {
+    let res = mov_operation(b"MOV ACC3, >4");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::ACC(3),
+        ValuePointer::PORT(4)
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_value_to_acc() {
+    let res = mov_operation(b"MOV 45, ACC2");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::VALUE(45),
+        ValuePointer::ACC(2)
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_val_to_acc() {
+    let res = mov_operation(b"MOV 76, ACC1");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::VALUE(76),
+        ValuePointer::ACC(1)
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_acc_to_acc() {
+    let res = mov_operation(b"MOV ACC2, ACC4");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::ACC(2),
+        ValuePointer::ACC(4)
+      )
+    );
+  }
+}
