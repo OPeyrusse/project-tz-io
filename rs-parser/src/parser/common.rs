@@ -4,12 +4,20 @@ use std::str;
 
 pub type RawData = [u8];
 
-fn to_int(v: &RawData) -> Result<u32, i8> {
+fn to<T: str::FromStr>(v: &RawData) -> Result<T, i8> {
 	str::from_utf8(v).or(Err(-1))
-		.and_then(|i| i.parse::<u32>().or(Err(-2)))
+		.and_then(|i| i.parse::<T>().or(Err(-2)))
+
+}
+fn to_u8(v: &RawData) -> Result<u8, i8> {
+	to(v)
+}
+fn to_u32(v: &RawData) -> Result<u32, i8> {
+	to(v)
 }
 
-named!(pub be_uint<&RawData, u32>, map_res!(digit, to_int));
+named!(pub be_uint<&RawData, u32>, map_res!(digit, to_u32));
+named!(pub be_u8<&RawData, u8>, map_res!(digit, to_u8));
 
 #[cfg(test)]
 pub mod tests {
@@ -43,7 +51,14 @@ pub mod tests {
 	fn test_parse_be_uint() {
 		let input = b"14";
 		let res = be_uint(input);
-		assert_result(res, 14u32, b"");
+		assert_full_result(res, 14u32);
+	}
+
+	#[test]
+	fn test_parse_be_u8() {
+		let input = b"4";
+		let res = be_u8(input);
+		assert_full_result(res, 4u8);
 	}
 
 }

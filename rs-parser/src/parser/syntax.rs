@@ -2,6 +2,7 @@ use nom::{space, newline as nl};
 
 use parser::common::{RawData, be_uint};
 use parser::address::{Node, Port, node_header, port_ref};
+use parser::instructions::{parse_instruction};
 
 #[derive(Debug, PartialEq)]
 struct InputMapping<'a> {
@@ -66,6 +67,15 @@ named!(pub node_block<&RawData, Node>,
 		node_line >> nl >>
 		inputs: inputs >> nl >>
 		code_line >> nl >>
+		separated_list_complete!(
+			do_parse!(
+				space >>
+				i: parse_instruction >>
+				space >>
+				(i)
+			),
+			nl
+		) >>
 		code_line >> nl >>
 		outputs: outputs >> nl >>
 		node_line >> nl >>
@@ -200,6 +210,7 @@ mod tests {
 ==========
 IN:1 -> 1
 --
+MOV 1>, >1
 ---------
 1 -> OUT:1
 =======

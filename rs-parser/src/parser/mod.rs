@@ -1,6 +1,7 @@
 mod address;
 mod syntax;
 mod common;
+mod instructions;
 
 use nom::IResult;
 use std::str;
