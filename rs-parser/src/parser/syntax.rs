@@ -1,6 +1,6 @@
-use nom::{space, newline as nl};
+use nom::{space};
 
-use parser::common::{RawData, be_uint};
+use parser::common::{RawData, be_uint, ospace, eol};
 use parser::address::{Node, Port, node_header, port_ref};
 use parser::instructions::{parse_instruction};
 
@@ -22,7 +22,6 @@ named!(code_line<&RawData, &RawData>, take_while!(call!(|c| c == b'-')));
 // List of inputs
 named!(input_item<&RawData, InputMapping>,
 	do_parse!(
-		opt!(space) >>
 		port: port_ref >>
 		space >> tag!("->") >> space >>
 		input: be_uint >>
@@ -32,8 +31,7 @@ named!(input_item<&RawData, InputMapping>,
 named!(inputs<&RawData, Vec<InputMapping> >,
 	separated_list_complete!(
 		do_parse!(
-			opt!(space) >> tag!(",") >> space >>
-			()
+			ospace >> tag!(",") >> space >> ()
 		),
 		input_item
 	)
@@ -42,7 +40,6 @@ named!(inputs<&RawData, Vec<InputMapping> >,
 // List of outputs
 named!(output_item<&RawData, OutputMapping>,
 	do_parse!(
-		opt!(space) >>
 		input: be_uint >>
 		space >> tag!("->") >> space >>
 		port: port_ref >>
@@ -52,7 +49,7 @@ named!(output_item<&RawData, OutputMapping>,
 named!(outputs<&RawData, Vec<OutputMapping> >,
 	separated_list_complete!(
 		do_parse!(
-			opt!(space) >> tag!(",") >> space >>
+			ospace >> tag!(",") >> space >>
 			()
 		),
 		output_item
@@ -61,24 +58,22 @@ named!(outputs<&RawData, Vec<OutputMapping> >,
 
 named!(pub node_block<&RawData, Node>,
 	do_parse!(
-		opt!(space) >>
-		node: node_header >>
-		opt!(space) >> nl >>
-		node_line >> nl >>
-		inputs: inputs >> nl >>
-		code_line >> nl >>
-		separated_list_complete!(
+		ospace >>
+		node: node_header >> eol >>
+		node_line >> eol >>
+		inputs: inputs >> eol >>
+		code_line >> eol >>
+		separated_nonempty_list_complete!(
+			eol,
 			do_parse!(
-				space >>
+				ospace >>
 				i: parse_instruction >>
-				space >>
 				(i)
-			),
-			nl
-		) >>
-		code_line >> nl >>
-		outputs: outputs >> nl >>
-		node_line >> nl >>
+			)
+		) >> eol >>
+		code_line >> eol >>
+		ospace >> outputs: outputs >> eol >>
+		node_line >> eol >>
 		(node)
 	)
 );
