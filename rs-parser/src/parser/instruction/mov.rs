@@ -7,9 +7,9 @@ use parser::instruction::base::*;
 named!(mov_from_in<&RawData, Operation>,
   do_parse!(
     tag!("MOV") >> space >>
-    from: input_port >>
+    from: input_pointer >>
     ospace >> tag!(",") >> ospace >>
-    to: alt!(acc_pointer | output_port) >>
+    to: alt!(acc_pointer | output_pointer) >>
     (Operation::MOV(from, to))
   )
 );
@@ -18,7 +18,7 @@ named!(mov_to_out<&RawData, Operation>,
     tag!("MOV") >> space >>
     from: alt!(acc_pointer | value_pointer) >>
     ospace >> tag!(",") >> ospace >>
-    to: output_port >>
+    to: output_pointer >>
     (Operation::MOV(from, to))
   )
 );

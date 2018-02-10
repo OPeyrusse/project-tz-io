@@ -1,6 +1,7 @@
 mod base;
 mod mov;
 mod memory;
+mod math;
 
 use parser::common::RawData;
 use parser::instruction::mov::mov_operation;
@@ -23,7 +24,9 @@ pub enum MemoryPointer {
 #[derive(Debug, PartialEq)]
 pub enum Operation {
   MOV(ValuePointer, ValuePointer),
-	SWP(MemoryPointer)
+	SAV(MemoryPointer),
+	SWP(MemoryPointer),
+  ADD(ValuePointer)
 }
 
 named!(pub parse_instruction<&RawData, Operation>,

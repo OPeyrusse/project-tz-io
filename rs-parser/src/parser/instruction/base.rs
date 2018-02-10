@@ -5,7 +5,7 @@ named!(pub acc_pointer<&RawData, ValuePointer>,
 	map!(tag!("ACC"), |_| ValuePointer::ACC)
 );
 
-named!(pub input_port<&RawData, ValuePointer>,
+named!(pub input_pointer<&RawData, ValuePointer>,
   do_parse!(
     port: be_uint >>
     tag!(">") >>
@@ -13,7 +13,7 @@ named!(pub input_port<&RawData, ValuePointer>,
   )
 );
 
-named!(pub output_port<&RawData, ValuePointer>,
+named!(pub output_pointer<&RawData, ValuePointer>,
   do_parse!(
     tag!(">") >>
     port: be_uint >>
@@ -41,14 +41,14 @@ mod tests {
   }
 
   #[test]
-  fn test_parse_input_port() {
-    let res = input_port(b"12>");
+  fn test_parse_input_pointer() {
+    let res = input_pointer(b"12>");
     assert_full_result(res, ValuePointer::PORT(12));
   }
 
   #[test]
-  fn test_parse_output_port() {
-    let res = output_port(b">43");
+  fn test_parse_output_pointer() {
+    let res = output_pointer(b">43");
     assert_full_result(res, ValuePointer::PORT(43));
   }
 
