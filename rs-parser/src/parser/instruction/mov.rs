@@ -54,12 +54,12 @@ mod tests {
 
   #[test]
   fn test_parse_mov_in_to_acc() {
-    let res = mov_operation(b"MOV 1>, ACC2");
+    let res = mov_operation(b"MOV 1>, ACC");
     assert_full_result(
       res,
       Operation::MOV(
         ValuePointer::PORT(1),
-        ValuePointer::ACC(2)
+        ValuePointer::ACC
       )
     );
   }
@@ -78,11 +78,11 @@ mod tests {
 
   #[test]
   fn test_parse_mov_acc_to_out() {
-    let res = mov_operation(b"MOV ACC3, >4");
+    let res = mov_operation(b"MOV ACC, >4");
     assert_full_result(
       res,
       Operation::MOV(
-        ValuePointer::ACC(3),
+        ValuePointer::ACC,
         ValuePointer::PORT(4)
       )
     );
@@ -90,36 +90,36 @@ mod tests {
 
   #[test]
   fn test_parse_mov_value_to_acc() {
-    let res = mov_operation(b"MOV 45, ACC2");
+    let res = mov_operation(b"MOV 45, ACC");
     assert_full_result(
       res,
       Operation::MOV(
         ValuePointer::VALUE(45),
-        ValuePointer::ACC(2)
+        ValuePointer::ACC
       )
     );
   }
 
   #[test]
   fn test_parse_mov_val_to_acc() {
-    let res = mov_operation(b"MOV 76, ACC1");
+    let res = mov_operation(b"MOV 76, ACC");
     assert_full_result(
       res,
       Operation::MOV(
         ValuePointer::VALUE(76),
-        ValuePointer::ACC(1)
+        ValuePointer::ACC
       )
     );
   }
 
   #[test]
   fn test_parse_mov_acc_to_acc() {
-    let res = mov_operation(b"MOV ACC2, ACC4");
+    let res = mov_operation(b"MOV ACC, ACC");
     assert_full_result(
       res,
       Operation::MOV(
-        ValuePointer::ACC(2),
-        ValuePointer::ACC(4)
+        ValuePointer::ACC,
+        ValuePointer::ACC
       )
     );
   }

@@ -2,15 +2,15 @@ use nom::{space};
 
 use parser::common::{RawData, be_uint, ospace, eol};
 use parser::address::{Node, Port, node_header, port_ref};
-use parser::instruction::{parse_instruction};
+use parser::instruction::{parse_instruction, Operation, ValuePointer, MemoryPointer};
 
 #[derive(Debug, PartialEq)]
-struct InputMapping<'a> {
+pub struct InputMapping<'a> {
 	from: Port<'a>,
 	to: u32
 }
 #[derive(Debug, PartialEq)]
-struct OutputMapping<'a> {
+pub struct OutputMapping<'a> {
 	from: u32,
 	to: Port<'a>
 }
@@ -56,14 +56,14 @@ named!(outputs<&RawData, Vec<OutputMapping> >,
 	)
 );
 
-named!(pub node_block<&RawData, Node>,
+named!(pub node_block<&RawData, (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>)>,
 	do_parse!(
 		ospace >>
 		node: node_header >> eol >>
 		node_line >> eol >>
-		inputs: inputs >> eol >>
+		ospace >> inputs: inputs >> eol >>
 		code_line >> eol >>
-		separated_nonempty_list_complete!(
+		ops: separated_nonempty_list_complete!(
 			eol,
 			do_parse!(
 				ospace >>
@@ -74,7 +74,7 @@ named!(pub node_block<&RawData, Node>,
 		code_line >> eol >>
 		ospace >> outputs: outputs >> eol >>
 		node_line >> eol >>
-		(node)
+		(node, inputs, outputs, ops)
 	)
 );
 
@@ -205,7 +205,9 @@ mod tests {
 ==========
 IN:1 -> 1
 --
-MOV 1>, >1
+MOV 1>, ACC
+SWP
+MOV ACC, >1
 ---------
 1 -> OUT:1
 =======
@@ -214,7 +216,26 @@ MOV 1>, >1
 		let res = node_block(input);
 		assert_full_result(
 			res,
-			Node::Node(&"123")
+			(
+				Node::Node(&"123"),
+				vec![
+					InputMapping {
+						from: Port { node: Node::In, port: 1 },
+						to: 1
+					}
+				],
+				vec![
+					OutputMapping {
+						from: 1,
+						to: Port { node: Node::Out, port: 1 }
+					}
+				],
+				vec![
+					Operation::MOV(ValuePointer::PORT(1), ValuePointer::ACC),
+					Operation::SWP(MemoryPointer::BAK(1)),
+					Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1))
+				]
+			)
 		);
 	}
 
