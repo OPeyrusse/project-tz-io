@@ -42,7 +42,7 @@ mod tests {
 
   #[test]
   fn test_parse_mov_in_to_out() {
-    let res = mov_operation(b"MOV 1>, >2");
+    let res = mov_operation(b"MOV <1, >2");
     assert_full_result(
       res,
       Operation::MOV(
@@ -54,7 +54,7 @@ mod tests {
 
   #[test]
   fn test_parse_mov_in_to_acc() {
-    let res = mov_operation(b"MOV 1>, ACC");
+    let res = mov_operation(b"MOV <1, ACC");
     assert_full_result(
       res,
       Operation::MOV(

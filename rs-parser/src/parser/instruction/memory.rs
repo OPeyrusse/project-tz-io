@@ -2,11 +2,11 @@ use parser::common::RawData;
 use parser::instruction::{MemoryPointer, Operation};
 
 named!(pub swp_operation<&RawData, Operation>,
-	map!(tag!("SWP"), |_| Operation::SWP(MemoryPointer::BAK(1)))
+	value!(Operation::SWP(MemoryPointer::BAK(1)), tag!("SWP"))
 );
 
 named!(pub sav_operation<&RawData, Operation>,
-	map!(tag!("SAV"), |_| Operation::SAV(MemoryPointer::BAK(1)))
+	value!(Operation::SAV(MemoryPointer::BAK(1)), tag!("SAV"))
 );
 
 #[cfg(test)]

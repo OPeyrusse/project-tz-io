@@ -2,13 +2,13 @@ use parser::common::{RawData, be_uint};
 use parser::instruction::{ValuePointer, MemoryPointer};
 
 named!(pub acc_pointer<&RawData, ValuePointer>,
-	map!(tag!("ACC"), |_| ValuePointer::ACC)
+	value!(ValuePointer::ACC, tag!("ACC"))
 );
 
 named!(pub input_pointer<&RawData, ValuePointer>,
   do_parse!(
+    tag!("<") >>
     port: be_uint >>
-    tag!(">") >>
     (ValuePointer::PORT(port))
   )
 );
@@ -26,7 +26,7 @@ named!(pub value_pointer<&RawData, ValuePointer>,
 );
 
 named!(pub bak_pointer<&RawData, MemoryPointer>,
-	map!(tag!("BAK"), |_| MemoryPointer::BAK(1))
+	value!(MemoryPointer::BAK(1), tag!("BAK"))
 );
 
 #[cfg(test)]
@@ -42,7 +42,7 @@ mod tests {
 
   #[test]
   fn test_parse_input_pointer() {
-    let res = input_pointer(b"12>");
+    let res = input_pointer(b"<12");
     assert_full_result(res, ValuePointer::PORT(12));
   }
 

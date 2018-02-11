@@ -205,7 +205,7 @@ mod tests {
 ==========
 IN:1 -> 1
 --
-MOV 1>, ACC
+MOV <1, ACC
 SWP
 MOV ACC, >1
 ---------

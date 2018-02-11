@@ -12,6 +12,18 @@ named!(pub add_operation<&RawData, Operation>,
 	)
 );
 
+named!(pub sub_operation<&RawData, Operation>,
+	do_parse!(
+		tag!("SUB") >> space >>
+		value: alt!(input_pointer | acc_pointer | value_pointer) >>
+		(Operation::SUB(value))
+	)
+);
+
+named!(pub neg_operation<&RawData, Operation>,
+	value!(Operation::NEG, tag!("NEG"))
+);
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -26,8 +38,7 @@ mod tests {
 
 	#[test]
 	fn test_parse_add_operation_with_input() {
-		// FIXME Failing because no backtracking 17> is value or input
-		let res = add_operation(b"ADD 17>");
+		let res = add_operation(b"ADD <17");
 		assert_full_result(res, Operation::ADD(ValuePointer::PORT(17)));
 	}
 
@@ -35,6 +46,30 @@ mod tests {
 	fn test_parse_add_operation_with_acc() {
 		let res = add_operation(b"ADD ACC");
 		assert_full_result(res, Operation::ADD(ValuePointer::ACC));
+	}
+
+	#[test]
+	fn test_parse_sub_operation_with_value() {
+		let res = sub_operation(b"SUB 1");
+		assert_full_result(res, Operation::SUB(ValuePointer::VALUE(1)));
+	}
+
+	#[test]
+	fn test_parse_sub_operation_with_input() {
+		let res = sub_operation(b"SUB <17");
+		assert_full_result(res, Operation::SUB(ValuePointer::PORT(17)));
+	}
+
+	#[test]
+	fn test_parse_sub_operation_with_acc() {
+		let res = sub_operation(b"SUB ACC");
+		assert_full_result(res, Operation::SUB(ValuePointer::ACC));
+	}
+
+	#[test]
+	fn test_parse_neg_operation() {
+		let res = neg_operation(b"NEG");
+		assert_full_result(res, Operation::NEG);
 	}
 
 }
