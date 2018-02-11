@@ -2,11 +2,13 @@ mod base;
 mod mov;
 mod memory;
 mod math;
+mod condition;
 
 use parser::common::RawData;
 use parser::instruction::mov::mov_operation;
 use parser::instruction::memory::{swp_operation, sav_operation};
 use parser::instruction::math::{add_operation, sub_operation, neg_operation};
+use parser::instruction::condition::*;
 
 #[derive(Debug, PartialEq)]
 pub enum ValuePointer {
@@ -23,13 +25,20 @@ pub enum MemoryPointer {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Operation {
+pub enum Operation<'a> {
   MOV(ValuePointer, ValuePointer),
 	SAV(MemoryPointer),
 	SWP(MemoryPointer),
   ADD(ValuePointer),
   SUB(ValuePointer),
-  NEG
+  NEG,
+  LABEL(&'a str),
+  JMP(&'a str),
+  JEZ(&'a str),
+  JNZ(&'a str),
+  JLZ(&'a str),
+  JGZ(&'a str),
+  JRO(ValuePointer)
 }
 
 named!(pub parse_instruction<&RawData, Operation>,
@@ -39,6 +48,13 @@ named!(pub parse_instruction<&RawData, Operation>,
     sav_operation |
     add_operation |
     sub_operation |
-    neg_operation
+    neg_operation |
+    label_operation |
+    jmp_operation |
+    jez_operation |
+    jnz_operation |
+    jlz_operation |
+    jgz_operation |
+    jro_operation
   )
 );
