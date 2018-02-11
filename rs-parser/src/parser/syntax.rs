@@ -205,9 +205,12 @@ mod tests {
 ==========
 IN:1 -> 1
 --
+START:
 MOV <1, ACC
+F1:
 SWP
 MOV ACC, >1
+JEZ F1
 ---------
 1 -> OUT:1
 =======
@@ -231,9 +234,12 @@ MOV ACC, >1
 					}
 				],
 				vec![
+					Operation::LABEL(&"START"),
 					Operation::MOV(ValuePointer::PORT(1), ValuePointer::ACC),
+					Operation::LABEL(&"F1"),
 					Operation::SWP(MemoryPointer::BAK(1)),
-					Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1))
+					Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1)),
+					Operation::JEZ(&"F1")
 				]
 			)
 		);

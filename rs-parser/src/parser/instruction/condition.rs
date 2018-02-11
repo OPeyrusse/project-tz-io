@@ -1,7 +1,7 @@
 use nom::{alphanumeric, space};
 use std::str::from_utf8;
 
-use parser::common::RawData;
+use parser::common::{RawData, ospace};
 use parser::instruction::{ValuePointer, Operation};
 use parser::instruction::base::{acc_pointer, input_pointer, value_pointer};
 
@@ -11,7 +11,7 @@ named!(label_name<&RawData, &str>,
 
 named!(pub label_operation<&RawData, Operation>,
 	do_parse!(
-		label: label_name >> tag!(":") >>
+		label: label_name >> ospace >> tag!(":") >>
 		(Operation::LABEL(label))
 	)
 );
@@ -52,6 +52,12 @@ mod tests {
 	fn test_parse_label_operation() {
 		let res = label_operation(b"aLabel1:");
 		assert_full_result(res, Operation::LABEL(&"aLabel1"));
+	}
+
+	#[test]
+	fn test_parse_label_operation_with_space() {
+		let res = label_operation(b"spaceLbl  :");
+		assert_full_result(res, Operation::LABEL(&"spaceLbl"));
 	}
 
 	#[test]
