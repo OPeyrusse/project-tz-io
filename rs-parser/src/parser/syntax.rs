@@ -3,6 +3,7 @@ use nom::{space};
 use parser::common::{RawData, be_uint, ospace, eol};
 use parser::address::{Node, Port, node_header, port_ref};
 use parser::instruction::{parse_instruction, Operation, ValuePointer, MemoryPointer};
+use parser::instruction::condition::label_operation;
 
 #[derive(Debug, PartialEq)]
 pub struct InputMapping<'a> {
@@ -56,6 +57,35 @@ named!(outputs<&RawData, Vec<OutputMapping> >,
 	)
 );
 
+named!(instruction_line<&RawData, (Option<Operation>, Operation)>,
+	alt!(
+		// Instruction only
+		do_parse!(
+			op: parse_instruction >> eol >>
+			(None, op)
+		) |
+		// Label only
+		do_parse!(
+			label: label_operation >> eol >>
+			(None, label)			
+		) |
+		// Label then insctruction
+		do_parse!(
+			label: label_operation >> ospace >>
+			op: parse_instruction >> eol >>
+			(Some(label), op)			
+		)
+	)
+);
+named!(instruction_list<&RawData, Vec<Operation> >,
+	fold_many1!(instruction_line, Vec::new(), |mut acc: Vec<_>, (label_opt, op)| {
+		if let Some(label) = label_opt {
+			acc.push(label);
+		}
+    acc.push(op);
+    acc
+	})
+);
 named!(pub node_block<&RawData, (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>)>,
 	do_parse!(
 		ospace >>
@@ -63,14 +93,7 @@ named!(pub node_block<&RawData, (Node, Vec<InputMapping>, Vec<OutputMapping>, Ve
 		node_line >> eol >>
 		ospace >> inputs: inputs >> eol >>
 		code_line >> eol >>
-		ops: separated_nonempty_list_complete!(
-			eol,
-			do_parse!(
-				ospace >>
-				i: parse_instruction >>
-				(i)
-			)
-		) >> eol >>
+		ops: instruction_list >>
 		code_line >> eol >>
 		ospace >> outputs: outputs >> eol >>
 		node_line >> eol >>
@@ -200,17 +223,69 @@ mod tests {
 	}
 
 	#[test]
+	fn test_parse_instruction_line_with_label_only() {
+		let res = instruction_line(b"LBL:  \n");
+		assert_full_result(
+			res,
+			(None, Operation::LABEL(&"LBL"))
+		);
+	}
+
+	#[test]
+	fn test_parse_instruction_line_with_instruction_only() {
+		let res = instruction_line(b"SWP  \n");
+		assert_full_result(
+			res,
+			(None, Operation::SWP(MemoryPointer::BAK(1)))
+		);
+	}
+
+	#[test]
+	fn test_parse_instruction_line_with_label_then_instruction() {
+		let res = instruction_line(b"LBL:SWP \n");
+		assert_full_result(
+			res,
+			(Some(Operation::LABEL(&"LBL")), Operation::SWP(MemoryPointer::BAK(1)))
+		);
+	}
+
+	#[test]
+	fn test_parse_with_consecutive_labels() {
+		let res = instruction_line(b"L1: L2:\n");
+		assert!(res.is_err(), true);
+	}
+
+	#[test]
+	fn test_parse_instruction_list() {
+		let input = b"START:
+MOV <1, ACC
+F1:SWP
+MOV ACC, >1
+JEZ F1\n";
+		let res = instruction_list(input);
+		assert_full_result(
+			res,
+			vec![
+				Operation::LABEL(&"START"),
+				Operation::MOV(ValuePointer::PORT(1), ValuePointer::ACC),
+				Operation::LABEL(&"F1"),
+				Operation::SWP(MemoryPointer::BAK(1)),
+				Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1)),
+				Operation::JEZ(&"F1")
+			]
+		);
+
+	}
+
+	#[test]
 	fn test_parse_node_block() {
 		let input = b"  Node #123
 ==========
 IN:1 -> 1
 --
-START:
 MOV <1, ACC
-F1:
 SWP
 MOV ACC, >1
-JEZ F1
 ---------
 1 -> OUT:1
 =======
@@ -234,12 +309,9 @@ JEZ F1
 					}
 				],
 				vec![
-					Operation::LABEL(&"START"),
 					Operation::MOV(ValuePointer::PORT(1), ValuePointer::ACC),
-					Operation::LABEL(&"F1"),
 					Operation::SWP(MemoryPointer::BAK(1)),
-					Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1)),
-					Operation::JEZ(&"F1")
+					Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1))
 				]
 			)
 		);

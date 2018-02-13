@@ -2,12 +2,12 @@ mod base;
 mod mov;
 mod memory;
 mod math;
-mod condition;
+pub mod condition;
 
 use parser::common::RawData;
-use parser::instruction::mov::mov_operation;
-use parser::instruction::memory::{swp_operation, sav_operation};
-use parser::instruction::math::{add_operation, sub_operation, neg_operation};
+use parser::instruction::mov::*;
+use parser::instruction::memory::*;
+use parser::instruction::math::*;
 use parser::instruction::condition::*;
 
 #[derive(Debug, PartialEq)]
@@ -49,7 +49,7 @@ named!(pub parse_instruction<&RawData, Operation>,
     add_operation |
     sub_operation |
     neg_operation |
-    label_operation |
+    // label_operation |
     jmp_operation |
     jez_operation |
     jnz_operation |
