@@ -93,13 +93,23 @@ named!(pub node_block<&RawData, NodeBlock>,
 		ospace >>
 		node: node_header >> eol >>
 		node_line >> eol >>
-		ospace >> inputs: inputs >> eol >>
-		code_line >> eol >>
+		inputs: opt!(
+			do_parse!(
+				ospace >> is: inputs >> eol >>
+				code_line >> eol >>
+				(is)
+			)
+		) >>
 		ops: instruction_list >>
-		code_line >> eol >>
-		ospace >> outputs: outputs >> eol >>
+		outputs: opt!(
+			do_parse!(
+				code_line >> eol >>
+				ospace >> os: outputs >> eol >>
+				(os)
+			)
+		) >>
 		node_line >> eol >>
-		(node, inputs, outputs, ops)
+		(node, inputs.unwrap_or(vec![]), outputs.unwrap_or(vec![]), ops)
 	)
 );
 
@@ -329,9 +339,24 @@ MOV ACC, >1
 	}
 
 	#[test]
+	fn test_parse_node_without_mapping() {
+		let input = b"  Node #123
+==========
+SWP
+=======
+";
+
+		let res =  node_block(input);
+		println!("{:?}", res);
+		let (_, (_, res_inputs, res_outputs, _)) = res.unwrap();
+		assert_eq!(res_inputs, vec![]);
+		assert_eq!(res_outputs, vec![]);
+	}
+
+	#[test]
 	fn test_parse_node_list() {
 		let input = b"
-Node #1
+ Node #1
 ==========
 IN:1 -> 1
 --
@@ -340,7 +365,7 @@ MOV <1,  >1
 1 -> #2:2
 =======
 
-Node #2
+ Node #2
 ==========
 #1:1 -> 2
 ----------
