@@ -20,6 +20,7 @@ named!(pub be_uint<&RawData, u32>, map_res!(digit, to_u32));
 named!(pub be_u8<&RawData, u8>, map_res!(digit, to_u8));
 named!(pub ospace<&RawData, Option<&RawData> >, opt!(space));
 named!(pub eol<&RawData, ()>, do_parse!(ospace >> newline >> ()));
+named!(pub opt_eol<&RawData, Vec<()> >, many0!(eol));
 
 #[cfg(test)]
 pub mod tests {

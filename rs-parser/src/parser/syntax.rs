@@ -1,6 +1,6 @@
 use nom::{space};
 
-use parser::common::{RawData, be_uint, ospace, eol};
+use parser::common::{RawData, be_uint, ospace, eol, opt_eol};
 use parser::address::{Node, Port, node_header, port_ref};
 use parser::instruction::{parse_instruction, Operation, ValuePointer, MemoryPointer};
 use parser::instruction::condition::label_operation;
@@ -67,13 +67,13 @@ named!(instruction_line<&RawData, (Option<Operation>, Operation)>,
 		// Label only
 		do_parse!(
 			label: label_operation >> eol >>
-			(None, label)			
+			(None, label)
 		) |
 		// Label then insctruction
 		do_parse!(
 			label: label_operation >> ospace >>
 			op: parse_instruction >> eol >>
-			(Some(label), op)			
+			(Some(label), op)
 		)
 	)
 );
@@ -86,7 +86,9 @@ named!(instruction_list<&RawData, Vec<Operation> >,
     acc
 	})
 );
-named!(pub node_block<&RawData, (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>)>,
+
+pub type NodeBlock<'a> = (Node<'a>, Vec<InputMapping<'a>>, Vec<OutputMapping<'a>>, Vec<Operation<'a>>);
+named!(pub node_block<&RawData, NodeBlock>,
 	do_parse!(
 		ospace >>
 		node: node_header >> eol >>
@@ -98,6 +100,15 @@ named!(pub node_block<&RawData, (Node, Vec<InputMapping>, Vec<OutputMapping>, Ve
 		ospace >> outputs: outputs >> eol >>
 		node_line >> eol >>
 		(node, inputs, outputs, ops)
+	)
+);
+
+named!(node_list<&RawData, Vec<NodeBlock> >,
+	do_parse!(
+		opt_eol >>
+		list: separated_nonempty_list_complete!(opt_eol, node_block) >>
+		opt_eol >>
+		(list)
 	)
 );
 
@@ -315,6 +326,74 @@ MOV ACC, >1
 				]
 			)
 		);
+	}
+
+	#[test]
+	fn test_parse_node_list() {
+		let input = b"
+Node #1
+==========
+IN:1 -> 1
+--
+MOV <1,  >1
+---------
+1 -> #2:2
+=======
+
+Node #2
+==========
+#1:1 -> 2
+----------
+MOV <2, >2
+----------
+2 -> OUT:1
+==========
+
+";
+
+		let res = node_list(input);
+		assert_full_result(
+			res,
+			vec![
+				(
+					Node::Node(&"1"),
+					vec![
+						InputMapping {
+							from: Port { node: Node::In, port: 1 },
+							to: 1
+						}
+					],
+					vec![
+						OutputMapping {
+							from: 1,
+							to: Port { node: Node::Node(&"2"), port: 2 }
+						}
+					],
+					vec![
+						Operation::MOV(ValuePointer::PORT(1), ValuePointer::PORT(1)),
+					]
+				),
+				(
+					Node::Node(&"2"),
+					vec![
+						InputMapping {
+							from: Port { node: Node::Node(&"1"), port: 1 },
+							to: 2
+						}
+					],
+					vec![
+						OutputMapping {
+							from: 2,
+							to: Port { node: Node::Out, port: 1 }
+						}
+					],
+					vec![
+						Operation::MOV(ValuePointer::PORT(2), ValuePointer::PORT(2)),
+					]
+				)
+			]
+		);
+
 	}
 
 }
