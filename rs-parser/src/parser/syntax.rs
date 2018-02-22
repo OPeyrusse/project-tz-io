@@ -88,7 +88,7 @@ named!(instruction_list<&RawData, Vec<Operation> >,
 );
 
 pub type NodeBlock<'a> = (Node<'a>, Vec<InputMapping<'a>>, Vec<OutputMapping<'a>>, Vec<Operation<'a>>);
-named!(pub node_block<&RawData, NodeBlock>,
+named!(node_block<&RawData, NodeBlock>,
 	do_parse!(
 		ospace >>
 		node: node_header >> eol >>
@@ -113,7 +113,7 @@ named!(pub node_block<&RawData, NodeBlock>,
 	)
 );
 
-named!(node_list<&RawData, Vec<NodeBlock> >,
+named!(pub node_list<&RawData, Vec<NodeBlock> >,
 	do_parse!(
 		opt_eol >>
 		list: separated_nonempty_list_complete!(opt_eol, node_block) >>

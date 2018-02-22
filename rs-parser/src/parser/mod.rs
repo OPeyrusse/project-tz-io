@@ -7,7 +7,7 @@ use nom::IResult;
 use std::str;
 
 pub fn parse(input: &common::RawData) {
-  let res = syntax::node_block(input);
+  let res = syntax::node_list(input);
   println!("{:?}", res);
   match res {
     IResult::Done(i, o) => println!(
