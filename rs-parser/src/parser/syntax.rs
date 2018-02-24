@@ -1,4 +1,4 @@
-use nom::{space};
+use nom::{space,ErrorKind};
 
 use parser::common::{RawData, be_uint, ospace, eol, opt_eol};
 use parser::address::{Node, Port, node_header, port_ref};
@@ -89,27 +89,30 @@ named!(instruction_list<&RawData, Vec<Operation> >,
 
 pub type NodeBlock<'a> = (Node<'a>, Vec<InputMapping<'a>>, Vec<OutputMapping<'a>>, Vec<Operation<'a>>);
 named!(node_block<&RawData, NodeBlock>,
-	do_parse!(
-		ospace >>
-		node: node_header >> eol >>
-		node_line >> eol >>
-		inputs: opt!(
-			do_parse!(
-				ospace >> is: inputs >> eol >>
-				code_line >> eol >>
-				(is)
-			)
-		) >>
-		ops: instruction_list >>
-		outputs: opt!(
-			do_parse!(
-				code_line >> eol >>
-				ospace >> os: outputs >> eol >>
-				(os)
-			)
-		) >>
-		node_line >> eol >>
-		(node, inputs.unwrap_or(vec![]), outputs.unwrap_or(vec![]), ops)
+	return_error!(
+		ErrorKind::Custom(1),
+		do_parse!(
+			ospace >>
+			node: node_header >> eol >>
+			node_line >> eol >>
+			inputs: opt!(
+				do_parse!(
+					ospace >> is: inputs >> eol >>
+					code_line >> eol >>
+					(is)
+				)
+			) >>
+			ops: instruction_list >>
+			outputs: opt!(
+				do_parse!(
+					code_line >> eol >>
+					ospace >> os: outputs >> eol >>
+					(os)
+				)
+			) >>
+			node_line >> eol >>
+			(node, inputs.unwrap_or(vec![]), outputs.unwrap_or(vec![]), ops)
+		)
 	)
 );
 

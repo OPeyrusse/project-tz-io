@@ -1,0 +1,29 @@
+#!/bin/bash
+readonly THIS_FILE=$(readlink -f ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "$THIS_FILE")
+
+readonly RUST_COMPILER=$DIR/rs-parser/target/debug/rs-parser
+
+function print_help() {
+	cat <<HELP
+Usage:
+	tzio [--rust|--clj] <filename>
+
+Options:
+	-h, --help: Prints this help message
+	--rust: Use the rust compiler
+	--clj: Use the Clojure compiler
+HELP
+	exit 0
+}
+
+compiler=
+case $1 in
+	-h|--help) print_help ;;
+	--rust)
+		compiler=$RUST_COMPILER
+		shift 1 ;;
+	'') compiler=$RUST_COMPILER ;;
+esac
+
+$compiler $1

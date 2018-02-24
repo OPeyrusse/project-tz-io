@@ -19,7 +19,20 @@ fn to_u32(v: &RawData) -> Result<u32, i8> {
 named!(pub be_uint<&RawData, u32>, map_res!(digit, to_u32));
 named!(pub be_u8<&RawData, u8>, map_res!(digit, to_u8));
 named!(pub ospace<&RawData, Option<&RawData> >, opt!(space));
-named!(pub eol<&RawData, ()>, do_parse!(ospace >> newline >> ()));
+named!(end_line_comment<&RawData, ()>,
+	do_parse!(
+		tag!("//") >> take_until!("\n") >>
+		()
+	)
+);
+named!(pub eol<&RawData, ()>,
+	do_parse!(
+		ospace >>
+		opt!(end_line_comment) >>
+		newline >>
+		()
+	)
+);
 named!(pub opt_eol<&RawData, Vec<()> >, many0!(eol));
 
 #[cfg(test)]
@@ -62,6 +75,31 @@ pub mod tests {
 		let input = b"4";
 		let res = be_u8(input);
 		assert_full_result(res, 4u8);
+	}
+
+	#[test]
+	fn test_parse_end_line_comment() {
+		let res = end_line_comment(b"// some comment\nnext");
+		assert_result(res, (), b"\nnext");
+	}
+
+	#[test]
+	fn test_parse_eol_with_comment() {
+		let res = eol(b"// eol with comment\nnext");
+		assert_result(res, (), b"next");
+	}
+
+	#[test]
+	fn test_parse_multiline_combining_comment_and_spaces() {
+		let res = opt_eol(b"
+
+	// Some comment
+
+// and multi
+// lines with comments
+next");
+		let (remaining, _) = res.unwrap();
+		assert_eq!(remaining, b"next");
 	}
 
 }

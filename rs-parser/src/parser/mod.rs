@@ -4,16 +4,19 @@ mod common;
 mod instruction;
 
 use nom::IResult;
-use std::str;
+use std::result::Result;
 
-pub fn parse(input: &common::RawData) {
+pub fn parse(input: &common::RawData) -> Result<Vec<syntax::NodeBlock>, ()> {
   let res = syntax::node_list(input);
-  println!("{:?}", res);
   match res {
-    IResult::Done(i, o) => println!(
-      "i: {:?} | o: {:?}",
-      str::from_utf8(i),
-      o),
-    _ => println!("error: {:?}", res),
+    IResult::Done(_i, o) => Result::Ok(o),
+    IResult::Error(e) => {
+      println!("error: {:?}", e);
+      Result::Err(())
+    },
+    IResult::Incomplete(needed) => {
+      println!("Missing data. Needed {:?}", needed);
+      Result::Err(())
+    }
   }
 }
