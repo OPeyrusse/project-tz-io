@@ -7,9 +7,9 @@ use parser::common::{RawData, be_uint};
 
 #[derive(PartialEq)]
 pub enum Node<'a> {
-    In,
-    Out,
-    Node(&'a str)
+	In,
+	Out,
+	Node(&'a str)
 }
 
 

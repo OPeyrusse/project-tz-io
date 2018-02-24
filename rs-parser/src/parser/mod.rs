@@ -6,7 +6,9 @@ mod instruction;
 use nom::IResult;
 use std::result::Result;
 
-pub fn parse(input: &common::RawData) -> Result<Vec<syntax::NodeBlock>, ()> {
+pub type ParsingResult<'a> = Result<Vec<syntax::NodeBlock<'a>>, ()>;
+
+pub fn parse(input: &common::RawData) -> ParsingResult {
   let res = syntax::node_list(input);
   match res {
     IResult::Done(_i, o) => Result::Ok(o),

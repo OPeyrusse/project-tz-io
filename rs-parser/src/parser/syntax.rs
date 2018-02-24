@@ -89,8 +89,8 @@ named!(instruction_list<&RawData, Vec<Operation> >,
 
 pub type NodeBlock<'a> = (Node<'a>, Vec<InputMapping<'a>>, Vec<OutputMapping<'a>>, Vec<Operation<'a>>);
 named!(node_block<&RawData, NodeBlock>,
-	return_error!(
-		ErrorKind::Custom(1),
+	dbg!(
+		// ErrorKind::Custom(1),
 		do_parse!(
 			ospace >>
 			node: node_header >> eol >>
