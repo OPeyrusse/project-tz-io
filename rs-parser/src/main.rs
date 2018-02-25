@@ -36,12 +36,14 @@ mod tests {
 
 	#[test]
 	fn test_sample_sum() {
-		let _r = parse_file("../language-samples/sum.io");
+		let res = parse_file("../language-samples/sum.io");
+		assert_eq!(res.is_ok(), true);
 	}
 
 	#[test]
 	fn test_sample_increment() {
-		let _r = parse_file("../language-samples/increment.io");
+		let res = parse_file("../language-samples/increment.io");
+		assert_eq!(res.is_ok(), true);
 	}
 
 }

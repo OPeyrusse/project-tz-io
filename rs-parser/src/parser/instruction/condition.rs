@@ -1,12 +1,11 @@
 use nom::{alphanumeric, space};
-use std::str::from_utf8;
 
-use parser::common::{RawData, ospace};
+use parser::common::{RawData, ospace, to_string};
 use parser::instruction::{ValuePointer, Operation};
 use parser::instruction::base::{acc_pointer, input_pointer, value_pointer};
 
-named!(label_name<&RawData, &str>,
-	map_res!(alphanumeric, from_utf8)
+named!(label_name<&RawData, String>,
+	map_res!(alphanumeric, to_string)
 );
 
 named!(pub label_operation<&RawData, Operation>,
@@ -51,49 +50,49 @@ mod tests {
 	#[test]
 	fn test_parse_label_operation() {
 		let res = label_operation(b"aLabel1:");
-		assert_full_result(res, Operation::LABEL(&"aLabel1"));
+		assert_full_result(res, Operation::LABEL(String::from("aLabel1")));
 	}
 
 	#[test]
 	fn test_parse_label_operation_with_space() {
 		let res = label_operation(b"spaceLbl  :");
-		assert_full_result(res, Operation::LABEL(&"spaceLbl"));
+		assert_full_result(res, Operation::LABEL(String::from("spaceLbl")));
 	}
 
 	#[test]
 	fn test_parse_label_operation_with_next() {
 		let res = label_operation(b"lbl: NEG");
-		assert_result(res, Operation::LABEL(&"lbl"), b" NEG");
+		assert_result(res, Operation::LABEL(String::from("lbl")), b" NEG");
 	}
 
 	#[test]
 	fn test_parse_jmp_operation() {
 		let res = jmp_operation(b"JMP label");
-		assert_full_result(res, Operation::JMP(&"label"));
+		assert_full_result(res, Operation::JMP(String::from("label")));
 	}
 
 	#[test]
 	fn test_parse_jez_operation() {
 		let res = jez_operation(b"JEZ label");
-		assert_full_result(res, Operation::JEZ(&"label"));
+		assert_full_result(res, Operation::JEZ(String::from("label")));
 	}
 
 	#[test]
 	fn test_parse_jnz_operation() {
 		let res = jnz_operation(b"JNZ label");
-		assert_full_result(res, Operation::JNZ(&"label"));
+		assert_full_result(res, Operation::JNZ(String::from("label")));
 	}
 
 	#[test]
 	fn test_parse_jlz_operation() {
 		let res = jlz_operation(b"JLZ label");
-		assert_full_result(res, Operation::JLZ(&"label"));
+		assert_full_result(res, Operation::JLZ(String::from("label")));
 	}
 
 	#[test]
 	fn test_parse_jgz_operation() {
 		let res = jgz_operation(b"JGZ label");
-		assert_full_result(res, Operation::JGZ(&"label"));
+		assert_full_result(res, Operation::JGZ(String::from("label")));
 	}
 
 	#[test]

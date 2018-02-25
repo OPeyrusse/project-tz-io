@@ -6,14 +6,14 @@ use parser::instruction::{parse_instruction, Operation, ValuePointer, MemoryPoin
 use parser::instruction::condition::label_operation;
 
 #[derive(Debug, PartialEq)]
-pub struct InputMapping<'a> {
-	from: Port<'a>,
+pub struct InputMapping {
+	from: Port,
 	to: u32
 }
 #[derive(Debug, PartialEq)]
-pub struct OutputMapping<'a> {
+pub struct OutputMapping {
 	from: u32,
-	to: Port<'a>
+	to: Port
 }
 
 // Syntax lines
@@ -87,7 +87,7 @@ named!(instruction_list<&RawData, Vec<Operation> >,
 	})
 );
 
-pub type NodeBlock<'a> = (Node<'a>, Vec<InputMapping<'a>>, Vec<OutputMapping<'a>>, Vec<Operation<'a>>);
+pub type NodeBlock<'a> = (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>);
 named!(node_block<&RawData, NodeBlock>,
 	dbg!(
 		// ErrorKind::Custom(1),
@@ -152,7 +152,7 @@ mod tests {
 		assert_full_result(
 			res_in,
 			InputMapping {
-				from: Port { node: Node::In, port: 1u32 },
+				from: Port::new(Node::In, 1),
 				to: 3u32
 			}
 		);
@@ -161,7 +161,7 @@ mod tests {
 		assert_full_result(
 			res_node,
 			InputMapping {
-				from: Port { node: Node::Node(&"node"), port: 32u32 },
+				from: Port::named_port(&"node", 32),
 				to: 1u32
 			}
 		);
@@ -174,7 +174,7 @@ mod tests {
 			res_one,
 			vec![
 				InputMapping {
-					from: Port { node: Node::Node(&"n"), port: 7u32 },
+					from: Port::named_port(&"n", 7),
 					to: 14u32,
 				}
 			]
@@ -185,11 +185,11 @@ mod tests {
 			res_many,
 			vec![
 				InputMapping {
-					from: Port { node: Node::Out, port: 1u32 },
+					from: Port::new(Node::Out, 1),
 					to: 2u32
 				},
 				InputMapping {
-					from: Port { node: Node::Node(&"abc"), port: 3u32 },
+					from: Port::named_port(&"abc", 3),
 					to: 4u32
 				}
 			]
@@ -203,7 +203,7 @@ mod tests {
 			res_in,
 			OutputMapping {
 				from: 1u32,
-				to: Port { node: Node::Out, port: 3u32 }
+				to: Port::new(Node::Out, 3)
 			}
 		);
 
@@ -212,7 +212,7 @@ mod tests {
 			res_node,
 			OutputMapping {
 				from: 1u32,
-				to: Port { node: Node::Node(&"node"), port: 32u32 }
+				to: Port::named_port(&"node", 32)
 			}
 		);
 	}
@@ -225,7 +225,7 @@ mod tests {
 			vec![
 				OutputMapping {
 					from: 3,
-					to: Port { node: Node::Node(&"n"), port: 7u32}
+					to: Port::named_port(&"n", 7)
 				}
 			]
 		);
@@ -236,11 +236,11 @@ mod tests {
 			vec![
 				OutputMapping {
 					from: 1u32,
-					to: Port { node: Node::Out, port: 2u32 }
+					to: Port::new(Node::Out, 2)
 				},
 				OutputMapping {
 					from: 3u32,
-					to: Port { node: Node::Node(&"abc"), port: 4u32 }
+					to: Port::named_port(&"abc", 4)
 				}
 			]
 		);
@@ -251,7 +251,7 @@ mod tests {
 		let res = instruction_line(b"LBL:  \n");
 		assert_full_result(
 			res,
-			(None, Operation::LABEL(&"LBL"))
+			(None, Operation::LABEL(String::from("LBL")))
 		);
 	}
 
@@ -269,7 +269,7 @@ mod tests {
 		let res = instruction_line(b"LBL:SWP \n");
 		assert_full_result(
 			res,
-			(Some(Operation::LABEL(&"LBL")), Operation::SWP(MemoryPointer::BAK(1)))
+		(Some(Operation::LABEL(String::from("LBL"))), Operation::SWP(MemoryPointer::BAK(1)))
 		);
 	}
 
@@ -290,12 +290,12 @@ JEZ F1\n";
 		assert_full_result(
 			res,
 			vec![
-				Operation::LABEL(&"START"),
+				Operation::LABEL(String::from("START")),
 				Operation::MOV(ValuePointer::PORT(1), ValuePointer::ACC),
-				Operation::LABEL(&"F1"),
+				Operation::LABEL(String::from("F1")),
 				Operation::SWP(MemoryPointer::BAK(1)),
 				Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1)),
-				Operation::JEZ(&"F1")
+				Operation::JEZ(String::from("F1"))
 			]
 		);
 
@@ -319,17 +319,17 @@ MOV ACC, >1
 		assert_full_result(
 			res,
 			(
-				Node::Node(&"123"),
+				Node::new_node("123"),
 				vec![
 					InputMapping {
-						from: Port { node: Node::In, port: 1 },
+						from: Port::new(Node::In, 1),
 						to: 1
 					}
 				],
 				vec![
 					OutputMapping {
 						from: 1,
-						to: Port { node: Node::Out, port: 1 }
+						to: Port::new(Node::Out, 1)
 					}
 				],
 				vec![
@@ -384,17 +384,17 @@ MOV <2, >2
 			res,
 			vec![
 				(
-					Node::Node(&"1"),
+					Node::new_node("1"),
 					vec![
 						InputMapping {
-							from: Port { node: Node::In, port: 1 },
+							from: Port::new(Node::In, 1),
 							to: 1
 						}
 					],
 					vec![
 						OutputMapping {
 							from: 1,
-							to: Port { node: Node::Node(&"2"), port: 2 }
+							to: Port::named_port(&"2", 2)
 						}
 					],
 					vec![
@@ -402,17 +402,17 @@ MOV <2, >2
 					]
 				),
 				(
-					Node::Node(&"2"),
+					Node::new_node("2"),
 					vec![
 						InputMapping {
-							from: Port { node: Node::Node(&"1"), port: 1 },
+							from: Port::named_port(&"1", 1),
 							to: 2
 						}
 					],
 					vec![
 						OutputMapping {
 							from: 2,
-							to: Port { node: Node::Out, port: 1 }
+							to: Port::new(Node::Out, 1)
 						}
 					],
 					vec![

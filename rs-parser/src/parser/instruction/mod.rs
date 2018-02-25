@@ -25,19 +25,19 @@ pub enum MemoryPointer {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Operation<'a> {
+pub enum Operation {
   MOV(ValuePointer, ValuePointer),
 	SAV(MemoryPointer),
 	SWP(MemoryPointer),
   ADD(ValuePointer),
   SUB(ValuePointer),
   NEG,
-  LABEL(&'a str),
-  JMP(&'a str),
-  JEZ(&'a str),
-  JNZ(&'a str),
-  JLZ(&'a str),
-  JGZ(&'a str),
+  LABEL(String),
+  JMP(String),
+  JEZ(String),
+  JNZ(String),
+  JLZ(String),
+  JGZ(String),
   JRO(ValuePointer)
 }
 

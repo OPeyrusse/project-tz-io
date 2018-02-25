@@ -4,6 +4,10 @@ use std::str;
 
 pub type RawData = [u8];
 
+pub fn to_string(v: &RawData) -> Result<String, i8> {
+	str::from_utf8(v).map(|s| s.to_string()).or(Err(-1))
+}
+
 fn to<T: str::FromStr>(v: &RawData) -> Result<T, i8> {
 	str::from_utf8(v).or(Err(-1))
 		.and_then(|i| i.parse::<T>().or(Err(-2)))
