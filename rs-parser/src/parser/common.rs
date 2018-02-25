@@ -94,6 +94,12 @@ pub mod tests {
 	}
 
 	#[test]
+	fn test_parse_eol_with_indented_comment() {
+		let res = eol(b"  	// eol with comment\nnext");
+		assert_result(res, (), b"next");
+	}
+
+	#[test]
 	fn test_parse_multiline_combining_comment_and_spaces() {
 		let res = opt_eol(b"
 

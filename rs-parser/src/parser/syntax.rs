@@ -1,4 +1,4 @@
-use nom::{space,ErrorKind};
+use nom::{space};
 
 use parser::common::{RawData, be_uint, ospace, eol, opt_eol};
 use parser::address::{Node, Port, node_header, port_ref};
@@ -57,62 +57,60 @@ named!(outputs<&RawData, Vec<OutputMapping> >,
 	)
 );
 
-named!(instruction_line<&RawData, (Option<Operation>, Operation)>,
+named!(instruction_line<&RawData, Vec<Operation> >,
 	alt!(
 		// Instruction only
 		do_parse!(
 			op: parse_instruction >> eol >>
-			(None, op)
+			(vec![op])
 		) |
 		// Label only
 		do_parse!(
 			label: label_operation >> eol >>
-			(None, label)
+			(vec![label])
 		) |
-		// Label then insctruction
+		// Label then instruction
 		do_parse!(
 			label: label_operation >> ospace >>
 			op: parse_instruction >> eol >>
-			(Some(label), op)
-		)
+			(vec![label, op])
+		) |
+		// Nothing but empty lines
+		value!(vec![], eol)
 	)
 );
 named!(instruction_list<&RawData, Vec<Operation> >,
-	fold_many1!(instruction_line, Vec::new(), |mut acc: Vec<_>, (label_opt, op)| {
-		if let Some(label) = label_opt {
-			acc.push(label);
+	fold_many1!(instruction_line, Vec::new(), |mut acc: Vec<_>, ops| {
+		for op in ops {
+    	acc.push(op);
 		}
-    acc.push(op);
     acc
 	})
 );
 
 pub type NodeBlock<'a> = (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>);
 named!(node_block<&RawData, NodeBlock>,
-	dbg!(
-		// ErrorKind::Custom(1),
-		do_parse!(
-			ospace >>
-			node: node_header >> eol >>
-			node_line >> eol >>
-			inputs: opt!(
-				do_parse!(
-					ospace >> is: inputs >> eol >>
-					code_line >> eol >>
-					(is)
-				)
-			) >>
-			ops: instruction_list >>
-			outputs: opt!(
-				do_parse!(
-					code_line >> eol >>
-					ospace >> os: outputs >> eol >>
-					(os)
-				)
-			) >>
-			node_line >> eol >>
-			(node, inputs.unwrap_or(vec![]), outputs.unwrap_or(vec![]), ops)
-		)
+	do_parse!(
+		ospace >>
+		node: node_header >> eol >>
+		node_line >> eol >>
+		inputs: opt!(
+			do_parse!(
+				ospace >> is: inputs >> eol >>
+				code_line >> eol >>
+				(is)
+			)
+		) >>
+		ops: instruction_list >>
+		outputs: opt!(
+			do_parse!(
+				code_line >> eol >>
+				ospace >> os: outputs >> eol >>
+				(os)
+			)
+		) >>
+		node_line >> eol >>
+		(node, inputs.unwrap_or(vec![]), outputs.unwrap_or(vec![]), ops)
 	)
 );
 
@@ -251,7 +249,7 @@ mod tests {
 		let res = instruction_line(b"LBL:  \n");
 		assert_full_result(
 			res,
-			(None, Operation::LABEL(String::from("LBL")))
+			vec![Operation::LABEL(String::from("LBL"))]
 		);
 	}
 
@@ -260,7 +258,7 @@ mod tests {
 		let res = instruction_line(b"SWP  \n");
 		assert_full_result(
 			res,
-			(None, Operation::SWP(MemoryPointer::BAK(1)))
+			vec![Operation::SWP(MemoryPointer::BAK(1))]
 		);
 	}
 
@@ -269,8 +267,23 @@ mod tests {
 		let res = instruction_line(b"LBL:SWP \n");
 		assert_full_result(
 			res,
-		(Some(Operation::LABEL(String::from("LBL"))), Operation::SWP(MemoryPointer::BAK(1)))
+			vec![
+				Operation::LABEL(String::from("LBL")),
+				Operation::SWP(MemoryPointer::BAK(1))
+			]
 		);
+	}
+
+	#[test]
+	fn test_parse_empty_instruction_line() {
+		let res = instruction_line(b" \n");
+		assert_full_result(res, vec![]);
+	}
+
+	#[test]
+	fn test_parse_instruction_line_with_comment() {
+		let res = instruction_line(b" // only comment\n");
+		assert_full_result(res, vec![]);
 	}
 
 	#[test]
@@ -354,6 +367,123 @@ SWP
 		let (_, (_, res_inputs, res_outputs, _)) = res.unwrap();
 		assert_eq!(res_inputs, vec![]);
 		assert_eq!(res_outputs, vec![]);
+	}
+
+	#[test]
+	fn test_parse_node_with_instruction_within_comments() {
+		let input = b"Node #1
+==========
+// before
+SWP
+// after
+=======
+";
+
+		let res = node_block(input);
+		assert_full_result(
+			res,
+			(
+				Node::new_node("1"),
+				vec![],
+				vec![],
+				vec![
+					Operation::SWP(MemoryPointer::BAK(1)),
+				]
+			)
+		);
+	}
+
+	#[test]
+	fn test_parse_node_with_instruction_and_eol_comment() {
+		let input = b"Node #1
+==========
+SWP // commenting operation
+=======
+";
+
+		let res = node_block(input);
+		assert_full_result(
+			res,
+			(
+				Node::new_node("1"),
+				vec![],
+				vec![],
+				vec![
+					Operation::SWP(MemoryPointer::BAK(1)),
+				]
+			)
+		);
+	}
+
+	#[test]
+	fn test_parse_node_with_indented_comment() {
+		let input = b"Node #3
+==========
+  // indent
+SWP
+=======
+";
+
+		let res = node_block(input);
+		assert_full_result(
+			res,
+			(
+				Node::new_node("3"),
+				vec![],
+				vec![],
+				vec![
+					Operation::SWP(MemoryPointer::BAK(1)),
+				]
+			)
+		);
+	}
+
+	#[test]
+	fn test_parse_node_with_comments_before_intructions() {
+		let input = b"Node #1
+==========
+// comment before
+ // indented comment
+SWP
+=======
+";
+
+		let res = node_block(input);
+		assert_full_result(
+			res,
+			(
+				Node::new_node("1"),
+				vec![],
+				vec![],
+				vec![
+					Operation::SWP(MemoryPointer::BAK(1)),
+				]
+			)
+		);
+	}
+
+	#[test]
+	fn test_parse_node_with_comments_after_intructions() {
+		let input = b"Node #1
+==========
+SWP
+ // indented comment
+// after instruction
+=======
+";
+
+		let res = node_block(input);
+		assert_full_result(
+			res,
+			(
+				Node::new_node("1"),
+				vec![],
+				vec![],
+				vec![
+					Operation::SWP(MemoryPointer::BAK(1)),
+				]
+			)
+		);
 	}
 
 	#[test]

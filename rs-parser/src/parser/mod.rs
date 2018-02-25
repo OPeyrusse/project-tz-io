@@ -3,17 +3,48 @@ mod syntax;
 mod common;
 mod instruction;
 
-use nom::IResult;
+use nom::{IResult, error_to_list};
 use std::result::Result;
 
 pub type ParsingResult<'a> = Result<Vec<syntax::NodeBlock<'a>>, ()>;
+
+// fn print_errors(e: &ErrorKind) {
+//   let mut first = true;
+//   let errors = vec![e];
+//   print!("Error while parsing: ");
+//   for error in &errors {
+//     if first {
+//       first = false;
+//     } else {
+//       print!("  caused by: ");
+//     }
+//     println!("{:?}", error);
+//   }
+// }
 
 pub fn parse(input: &common::RawData) -> ParsingResult {
   let res = syntax::node_list(input);
   match res {
     IResult::Done(_i, o) => Result::Ok(o),
     IResult::Error(e) => {
-      println!("error: {:?}", e);
+      // match &e {
+      //   ErrorKind => print_errors(&e),
+      //   Err => println!("{:?}", e),
+      //   _ => println!("{:?}", e)
+      // }
+
+      let mut first = true;
+      println!("{:?}", e);
+      let errors = error_to_list(&e);
+      for error in &errors {
+        if first {
+          println!("Error while parsing: {:?}", error);
+          first = false;
+        } else {
+          println!("  caused by: {:?}", error);
+        }
+      }
+      // println!("{:?}", e);
       Result::Err(())
     },
     IResult::Incomplete(needed) => {
