@@ -9,14 +9,14 @@ named!(mov_from_in<&RawData, Operation>,
     tag!("MOV") >> space >>
     from: input_pointer >>
     ospace >> tag!(",") >> ospace >>
-    to: alt!(acc_pointer | output_pointer) >>
+    to: alt!(acc_pointer | nil_pointer | output_pointer) >>
     (Operation::MOV(from, to))
   )
 );
 named!(mov_to_out<&RawData, Operation>,
   do_parse!(
     tag!("MOV") >> space >>
-    from: alt!(acc_pointer | value_pointer) >>
+    from: alt!(acc_pointer | nil_pointer | value_pointer) >>
     ospace >> tag!(",") >> ospace >>
     to: output_pointer >>
     (Operation::MOV(from, to))
@@ -25,7 +25,7 @@ named!(mov_to_out<&RawData, Operation>,
 named!(mov_accs<&RawData, Operation>,
   do_parse!(
     tag!("MOV") >> space >>
-    from: alt!(value_pointer | acc_pointer) >>
+    from: alt!(value_pointer | acc_pointer | nil_pointer ) >>
     ospace >> tag!(",") >> ospace >>
     to: acc_pointer >>
     (Operation::MOV(from, to))
@@ -38,7 +38,7 @@ named!(pub mov_operation<&RawData, Operation>,
 #[cfg(test)]
 mod tests {
   use super::*;
-  use parser::common::tests::assert_full_result;
+  use parser::common::tests::*;
 
   #[test]
   fn test_parse_mov_in_to_out() {
@@ -122,5 +122,47 @@ mod tests {
         ValuePointer::ACC
       )
     );
+  }
+
+  #[test]
+  fn test_parse_mov_nil_to_acc() {
+    let res = mov_operation(b"MOV NIL, ACC");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::NIL,
+        ValuePointer::ACC
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_nil_to_out() {
+    let res = mov_operation(b"MOV NIL, >12");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::NIL,
+        ValuePointer::PORT(12)
+      )
+    );
+  }
+
+  #[test]
+  fn test_parse_mov_in_to_nil() {
+    let res = mov_operation(b"MOV <1, NIL");
+    assert_full_result(
+      res,
+      Operation::MOV(
+        ValuePointer::PORT(1),
+        ValuePointer::NIL
+      )
+    );
+  }
+
+  #[test]
+  fn test_cannot_parse_out_to_in() {
+    let res = mov_operation(b"MOV >1, <2");
+    assert_cannot_parse(res);
   }
 }

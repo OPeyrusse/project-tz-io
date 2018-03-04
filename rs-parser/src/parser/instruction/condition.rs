@@ -2,7 +2,12 @@ use nom::{alphanumeric, space};
 
 use parser::common::{RawData, ospace, to_string};
 use parser::instruction::{ValuePointer, Operation};
-use parser::instruction::base::{acc_pointer, input_pointer, value_pointer};
+use parser::instruction::base::{
+	acc_pointer,
+	nil_pointer,
+	input_pointer,
+	value_pointer
+};
 
 named!(label_name<&RawData, String>,
 	map_res!(alphanumeric, to_string)
@@ -36,7 +41,7 @@ jump_fn!(jgz_operation, "JGZ", Operation::JGZ);
 named!(pub jro_operation<&RawData, Operation>,
 	do_parse!(
 		tag!("JRO") >> space >>
-		value: alt!(acc_pointer | input_pointer | value_pointer) >>
+		value: alt!(acc_pointer | nil_pointer | input_pointer | value_pointer) >>
 		(Operation::JRO(value))
 	)
 );
@@ -45,7 +50,7 @@ named!(pub jro_operation<&RawData, Operation>,
 mod tests {
 	use super::*;
 
-	use parser::common::tests::{assert_full_result, assert_result};
+	use parser::common::tests::*;
 
 	#[test]
 	fn test_parse_label_operation() {
@@ -111,5 +116,17 @@ mod tests {
 	fn test_parse_jro_operation_with_acc() {
 		let res = jro_operation(b"JRO ACC");
 		assert_full_result(res, Operation::JRO(ValuePointer::ACC));
+	}
+
+	#[test]
+	fn test_parse_jro_operation_with_nil() {
+		let res = jro_operation(b"JRO NIL");
+		assert_full_result(res, Operation::JRO(ValuePointer::NIL));
+	}
+
+	#[test]
+	fn test_cannot_parse_jro_operation_from_out() {
+		let res = jro_operation(b"JRO >12");
+		assert_cannot_parse(res);
 	}
 }

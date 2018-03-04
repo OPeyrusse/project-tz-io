@@ -14,6 +14,7 @@ use parser::instruction::condition::*;
 pub enum ValuePointer {
   VALUE(u32),
   ACC,
+  NIL,
   PORT(u32)
 }
 
