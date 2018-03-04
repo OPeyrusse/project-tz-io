@@ -5,6 +5,10 @@ named!(pub acc_pointer<&RawData, ValuePointer>,
 	value!(ValuePointer::ACC, tag!("ACC"))
 );
 
+named!(pub nil_pointer<&RawData, ValuePointer>,
+	value!(ValuePointer::NIL, tag!("NIL"))
+);
+
 named!(pub input_pointer<&RawData, ValuePointer>,
   do_parse!(
     tag!("<") >>
@@ -35,9 +39,15 @@ mod tests {
   use parser::common::tests::assert_full_result;
 
   #[test]
-  fn test_parse_acc_pointer_explicit() {
+  fn test_parse_acc_pointer() {
     let res_explicit = acc_pointer(b"ACC");
     assert_full_result(res_explicit, ValuePointer::ACC);
+  }
+
+  #[test]
+  fn test_parse_nil_pointer() {
+    let res_explicit = nil_pointer(b"NIL");
+    assert_full_result(res_explicit, ValuePointer::NIL);
   }
 
   #[test]
