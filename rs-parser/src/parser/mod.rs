@@ -6,7 +6,7 @@ mod instruction;
 use nom::{IResult, error_to_list};
 use std::result::Result;
 
-pub type ParsingResult<'a> = Result<Vec<syntax::NodeBlock<'a>>, ()>;
+pub type ParsingResult = Result<Vec<syntax::NodeBlock>, ()>;
 
 // fn print_errors(e: &ErrorKind) {
 //   let mut first = true;

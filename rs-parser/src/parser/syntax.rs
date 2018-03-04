@@ -88,7 +88,7 @@ named!(instruction_list<&RawData, Vec<Operation> >,
 	})
 );
 
-pub type NodeBlock<'a> = (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>);
+pub type NodeBlock = (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>);
 named!(node_block<&RawData, NodeBlock>,
 	do_parse!(
 		ospace >>
