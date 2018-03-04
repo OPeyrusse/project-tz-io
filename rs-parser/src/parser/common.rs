@@ -67,6 +67,10 @@ pub mod tests {
 		assert_result(res, value, b"");
 	}
 
+	pub fn assert_cannot_parse<Result: PartialEq + Debug>(res: IResult<&[u8], Result>) {
+		assert_eq!(res.is_err(), true, "Unexpected sucess of {:?}", res);
+	}
+
 	#[test]
 	fn test_parse_be_uint() {
 		let input = b"14";

@@ -38,7 +38,7 @@ named!(pub mov_operation<&RawData, Operation>,
 #[cfg(test)]
 mod tests {
   use super::*;
-  use parser::common::tests::assert_full_result;
+  use parser::common::tests::*;
 
   #[test]
   fn test_parse_mov_in_to_out() {
@@ -158,5 +158,11 @@ mod tests {
         ValuePointer::NIL
       )
     );
+  }
+
+  #[test]
+  fn test_cannot_parse_out_to_in() {
+    let res = mov_operation(b"MOV >1, <2");
+    assert_cannot_parse(res);
   }
 }

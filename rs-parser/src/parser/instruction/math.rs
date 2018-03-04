@@ -33,7 +33,7 @@ named!(pub neg_operation<&RawData, Operation>,
 mod tests {
 	use super::*;
 
-	use parser::common::tests::assert_full_result;
+	use parser::common::tests::*;
 
 	#[test]
 	fn test_parse_add_operation_with_value() {
@@ -58,6 +58,13 @@ mod tests {
 		let res = add_operation(b"ADD NIL");
 		assert_full_result(res, Operation::ADD(ValuePointer::NIL));
 	}
+
+	#[test]
+	fn test_cannot_parse_add_from_out() {
+		let res = add_operation(b"ADD >1");
+		assert_cannot_parse(res);
+	}
+
 	#[test]
 	fn test_parse_sub_operation_with_value() {
 		let res = sub_operation(b"SUB 1");
@@ -80,6 +87,12 @@ mod tests {
 	fn test_parse_sub_operation_with_nil() {
 		let res = sub_operation(b"SUB NIL");
 		assert_full_result(res, Operation::SUB(ValuePointer::NIL));
+	}
+
+	#[test]
+	fn test_cannot_parse_sub_from_out() {
+		let res = add_operation(b"SUB >1");
+		assert_cannot_parse(res);
 	}
 
 	#[test]

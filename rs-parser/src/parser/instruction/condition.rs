@@ -50,7 +50,7 @@ named!(pub jro_operation<&RawData, Operation>,
 mod tests {
 	use super::*;
 
-	use parser::common::tests::{assert_full_result, assert_result};
+	use parser::common::tests::*;
 
 	#[test]
 	fn test_parse_label_operation() {
@@ -122,5 +122,11 @@ mod tests {
 	fn test_parse_jro_operation_with_nil() {
 		let res = jro_operation(b"JRO NIL");
 		assert_full_result(res, Operation::JRO(ValuePointer::NIL));
+	}
+
+	#[test]
+	fn test_cannot_parse_jro_operation_from_out() {
+		let res = jro_operation(b"JRO >12");
+		assert_cannot_parse(res);
 	}
 }
