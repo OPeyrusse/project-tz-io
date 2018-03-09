@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 mod parser;
+mod postprocessor;
 mod checker;
 
 fn parse_file(filename: &str) -> parser::ParsingResult {
@@ -20,7 +21,8 @@ fn parse_file(filename: &str) -> parser::ParsingResult {
 }
 
 fn process_file(filename: &str) -> parser::ParsingResult {
-	let result = parse_file(filename);
+	let mut result = parse_file(filename);
+	postprocessor::process(&mut result);
 	checker::check(&result);
 	result
 }

@@ -7,13 +7,13 @@ use parser::instruction::condition::label_operation;
 
 #[derive(Debug, PartialEq)]
 pub struct InputMapping {
-	from: Port,
-	to: u32
+	pub from: Port,
+	pub to: u32
 }
 #[derive(Debug, PartialEq)]
 pub struct OutputMapping {
-	from: u32,
-	to: Port
+	pub from: u32,
+	pub to: Port
 }
 
 // Syntax lines

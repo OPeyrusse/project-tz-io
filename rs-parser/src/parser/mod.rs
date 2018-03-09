@@ -1,7 +1,7 @@
-mod address;
-mod syntax;
-mod common;
-mod instruction;
+pub mod address;
+pub mod syntax;
+pub mod common;
+pub mod instruction;
 
 use nom::{IResult, error_to_list};
 use std::result::Result;
