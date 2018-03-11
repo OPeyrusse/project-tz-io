@@ -21,8 +21,11 @@ fn parse_file(filename: &str) -> parser::ParsingResult {
 }
 
 fn process_file(filename: &str) -> parser::ParsingResult {
-	let mut result = parse_file(filename);
-	postprocessor::process(&mut result);
+	let mut result = parse_file(filename)
+		.map(|mut r| {
+			postprocessor::process(&mut r);
+			r
+		});
 	checker::check(&result);
 	result
 }

@@ -1,7 +1,7 @@
 mod mapping;
 
-use parser::ParsingResult;
+use parser::ParsingTree;
 
-pub fn process(parsingTree: &mut ParsingResult) {
+pub fn process(parsingTree: &mut ParsingTree) {
   mapping::complete_mappings(parsingTree);
 }
