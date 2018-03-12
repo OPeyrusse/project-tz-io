@@ -28,7 +28,7 @@ pub fn check(parsing_tree: &ParsingResult) {
 		&Result::Ok(ref res) => {
 			println!("{:?}", res);
 			let mut checks = CheckResult::new();
-			if !mapping::check(&parsing_tree, &mut checks) {
+			if !mapping::check(res, &mut checks) {
 				println!(" -> Mapping errors ...")
 			}
 			if checks.has_warnings() {
