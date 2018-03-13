@@ -1,4 +1,5 @@
 mod mapping;
+mod instruction;
 
 use std::result::Result;
 
@@ -12,6 +13,10 @@ pub struct CheckResult {
 impl CheckResult {
 	pub fn new() -> CheckResult {
 		CheckResult { warnings: Vec::new(), errors: Vec::new() }
+	}
+
+	pub fn add_warning(&mut self, message: String) {
+		self.warnings.push(message);
 	}
 
 	fn has_errors(&self) -> bool {
@@ -30,6 +35,9 @@ pub fn check(parsing_tree: &ParsingResult) {
 			let mut checks = CheckResult::new();
 			if !mapping::check(res, &mut checks) {
 				println!(" -> Mapping errors ...")
+			}
+			if !instruction::check(res, &mut checks) {
+				println!(" -> Instruction errors ...")
 			}
 			if checks.has_warnings() {
 				println!("Warnings in your project");

@@ -12,14 +12,15 @@ pub enum Node {
 	Node(String)
 }
 
-
 impl fmt::Debug for Node {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    match self {
-      &Node::In => write!(f, "<IN>"),
-      &Node::Out => write!(f, "<OUT>"),
-      &Node::Node(ref id) => write!(f, "Node#{}", id)
-    }
+    self.do_fmt(f)
+  }
+}
+
+impl fmt::Display for Node {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    self.do_fmt(f)
   }
 }
 
@@ -27,6 +28,14 @@ impl Node {
 	pub fn new_node(name: &str) -> Self {
 		Node::Node(name.to_string())
 	}
+
+	fn do_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      &Node::In => write!(f, "<IN>"),
+      &Node::Out => write!(f, "<OUT>"),
+      &Node::Node(ref id) => write!(f, "Node#{}", id)
+    }
+  }
 }
 
 #[derive(Debug, PartialEq)]
