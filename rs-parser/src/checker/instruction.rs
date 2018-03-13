@@ -107,7 +107,9 @@ mod tests {
       ],
       vec![],
       vec![
-        Operation::JRO(ValuePointer::PORT(1))
+        Operation::JRO(ValuePointer::PORT(1)),
+        Operation::JRO(ValuePointer::ACC),
+        Operation::JRO(ValuePointer::VALUE(2))
       ]
     );
     check_node(&node_ok, &mut check);
@@ -124,6 +126,45 @@ mod tests {
       vec![],
       vec![
         Operation::JRO(ValuePointer::PORT(2))
+      ]
+    );
+    check_node(&node_ko, &mut check);
+    assert_eq!(check.has_warnings(), true);
+  }
+
+  #[test]
+  fn test_check_node_on_ADD() {
+    let mut check = CheckResult::new();
+    
+    let node_ok = (
+      Node::new_node(&"a"),
+      vec![
+        InputMapping {
+          from: Port::new(Node::In, 1),
+          to: 1
+        }
+      ],
+      vec![],
+      vec![
+        Operation::ADD(ValuePointer::PORT(1)),
+        Operation::ADD(ValuePointer::ACC),
+        Operation::ADD(ValuePointer::VALUE(2))
+      ]
+    );
+    check_node(&node_ok, &mut check);
+    assert_eq!(check.has_warnings(), false);
+    
+    let node_ko = (
+      Node::new_node(&"a"),
+      vec![
+        InputMapping {
+          from: Port::new(Node::In, 1),
+          to: 1
+        }
+      ],
+      vec![],
+      vec![
+        Operation::ADD(ValuePointer::PORT(2))
       ]
     );
     check_node(&node_ko, &mut check);
