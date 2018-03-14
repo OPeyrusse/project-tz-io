@@ -26,6 +26,14 @@ impl CheckResult {
 	fn has_warnings(&self) -> bool {
 		!self.warnings.is_empty()
 	}
+
+	fn error_count(&self) -> usize {
+		self.errors.len()
+	}
+
+	fn warning_count(&self) -> usize {
+		self.warnings.len()
+	}
 }
 
 pub fn check(parsing_tree: &ParsingResult) {

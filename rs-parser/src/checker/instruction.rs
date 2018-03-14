@@ -73,6 +73,12 @@ fn check_node(node: &NodeBlock, result: &mut CheckResult) {
         test_input(result, &inputs, &node.0, op, from);
         test_output(result, &outputs, &node.0, op, to);
       },
+      &Operation::ADD(ref value) => {
+        test_output(result, &inputs, &node.0, op, value);
+      },
+      &Operation::SUB(ref value) => {
+        test_output(result, &inputs, &node.0, op, value);
+      },
       &Operation::JRO(ref value) => {
         test_output(result, &inputs, &node.0, op, value);
       },
@@ -101,7 +107,7 @@ mod tests {
       Node::new_node(&"a"),
       vec![
         InputMapping {
-          from: Port::new(Node::In, 1),
+          from: Port::new(Node::In, 3),
           to: 1
         }
       ],
@@ -119,11 +125,16 @@ mod tests {
       Node::new_node(&"a"),
       vec![
         InputMapping {
-          from: Port::new(Node::In, 1),
+          from: Port::new(Node::In, 3),
           to: 1
         }
       ],
-      vec![],
+      vec![
+        OutputMapping {
+          from: 2,
+          to: Port::new(Node::Out, 3),
+        }
+      ],
       vec![
         Operation::JRO(ValuePointer::PORT(2))
       ]
@@ -140,7 +151,7 @@ mod tests {
       Node::new_node(&"a"),
       vec![
         InputMapping {
-          from: Port::new(Node::In, 1),
+          from: Port::new(Node::In, 3),
           to: 1
         }
       ],
@@ -158,16 +169,115 @@ mod tests {
       Node::new_node(&"a"),
       vec![
         InputMapping {
-          from: Port::new(Node::In, 1),
+          from: Port::new(Node::In, 3),
           to: 1
         }
       ],
-      vec![],
+      vec![
+        OutputMapping {
+          from: 2,
+          to: Port::new(Node::Out, 3),
+        }
+      ],
       vec![
         Operation::ADD(ValuePointer::PORT(2))
       ]
     );
     check_node(&node_ko, &mut check);
     assert_eq!(check.has_warnings(), true);
+  }
+
+  #[test]
+  fn test_check_node_on_SUB() {
+    let mut check = CheckResult::new();
+    
+    let node_ok = (
+      Node::new_node(&"a"),
+      vec![
+        InputMapping {
+          from: Port::new(Node::In, 3),
+          to: 1
+        }
+      ],
+      vec![],
+      vec![
+        Operation::SUB(ValuePointer::PORT(1)),
+        Operation::SUB(ValuePointer::ACC),
+        Operation::SUB(ValuePointer::VALUE(2))
+      ]
+    );
+    check_node(&node_ok, &mut check);
+    assert_eq!(check.has_warnings(), false);
+    
+    let node_ko = (
+      Node::new_node(&"a"),
+      vec![
+        InputMapping {
+          from: Port::new(Node::In, 3),
+          to: 1
+        }
+      ],
+      vec![
+        OutputMapping {
+          from: 2,
+          to: Port::new(Node::Out, 3),
+        }
+      ],
+      vec![
+        Operation::SUB(ValuePointer::PORT(2))
+      ]
+    );
+    check_node(&node_ko, &mut check);
+    assert_eq!(check.has_warnings(), true);
+  }
+
+  #[test]
+  fn test_check_node_on_MOV() {
+    let mut check = CheckResult::new();
+    
+    let node_ok = (
+      Node::new_node(&"a"),
+      vec![
+        InputMapping {
+          from: Port::new(Node::In, 3),
+          to: 1
+        }
+      ],
+      vec![
+        OutputMapping {
+          from: 2,
+          to: Port::new(Node::Out, 3)
+        }
+      ],
+      vec![
+        Operation::MOV(ValuePointer::PORT(1), ValuePointer::PORT(2)),
+        Operation::MOV(ValuePointer::PORT(1), ValuePointer::ACC),
+        Operation::MOV(ValuePointer::ACC, ValuePointer::VALUE(2))
+      ]
+    );
+    check_node(&node_ok, &mut check);
+    assert_eq!(check.has_warnings(), false);
+    
+    let node_ko = (
+      Node::new_node(&"a"),
+      vec![
+        InputMapping {
+          from: Port::new(Node::In, 1),
+          to: 1
+        }
+      ],
+      vec![
+        OutputMapping {
+          from: 2,
+          to: Port::new(Node::Out, 1),
+        }
+      ],
+      vec![
+        Operation::MOV(ValuePointer::PORT(2), ValuePointer::ACC),
+        Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1))
+      ]
+    );
+    check_node(&node_ko, &mut check);
+    assert_eq!(check.warning_count(), 2);
   }
 }
