@@ -1,5 +1,6 @@
 mod mapping;
 mod instruction;
+mod interface;
 
 use std::result::Result;
 
@@ -13,6 +14,10 @@ pub struct CheckResult {
 impl CheckResult {
 	pub fn new() -> CheckResult {
 		CheckResult { warnings: Vec::new(), errors: Vec::new() }
+	}
+
+	pub fn add_error(&mut self, message: String) {
+		self.errors.push(message);
 	}
 
 	pub fn add_warning(&mut self, message: String) {
@@ -43,6 +48,9 @@ pub fn check(parsing_tree: &ParsingResult) {
 			let mut checks = CheckResult::new();
 			if !mapping::check(res, &mut checks) {
 				println!(" -> Mapping errors ...")
+			}
+			if !interface::check(res, &mut checks) {
+				println!(" -> Node interface errors ...")
 			}
 			if !instruction::check(res, &mut checks) {
 				println!(" -> Instruction errors ...")

@@ -39,7 +39,7 @@ fn test_input(
     pointer: &ValuePointer) {
   if let &ValuePointer::PORT(ref port) = pointer {
     if !inputs.contains(port) {
-      result.add_warning(
+      result.add_error(
         format!(
           "Port {} from <op> is not defined in node {} inputs",
           port, node));
@@ -55,7 +55,7 @@ fn test_output(
     pointer: &ValuePointer) {
   if let &ValuePointer::PORT(ref port) = pointer {
     if !outputs.contains(port) {
-      result.add_warning(
+      result.add_error(
         format!(
           "Port {} from <op> is not defined in node {} outputs",
           port, node));
@@ -88,11 +88,12 @@ fn check_node(node: &NodeBlock, result: &mut CheckResult) {
 }
 
 pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
+  let initial_count = result.error_count();
   for node in tree {
     check_node(node, result);
   } 
 
-  true
+  initial_count == result.error_count()
 }
 
 #[cfg(test)]
@@ -119,7 +120,7 @@ mod tests {
       ]
     );
     check_node(&node_ok, &mut check);
-    assert_eq!(check.has_warnings(), false);
+    assert_eq!(check.has_errors(), false);
     
     let node_ko = (
       Node::new_node(&"a"),
@@ -140,7 +141,7 @@ mod tests {
       ]
     );
     check_node(&node_ko, &mut check);
-    assert_eq!(check.has_warnings(), true);
+    assert_eq!(check.has_errors(), true);
   }
 
   #[test]
@@ -163,7 +164,7 @@ mod tests {
       ]
     );
     check_node(&node_ok, &mut check);
-    assert_eq!(check.has_warnings(), false);
+    assert_eq!(check.has_errors(), false);
     
     let node_ko = (
       Node::new_node(&"a"),
@@ -184,7 +185,7 @@ mod tests {
       ]
     );
     check_node(&node_ko, &mut check);
-    assert_eq!(check.has_warnings(), true);
+    assert_eq!(check.has_errors(), true);
   }
 
   #[test]
@@ -207,7 +208,7 @@ mod tests {
       ]
     );
     check_node(&node_ok, &mut check);
-    assert_eq!(check.has_warnings(), false);
+    assert_eq!(check.has_errors(), false);
     
     let node_ko = (
       Node::new_node(&"a"),
@@ -228,7 +229,7 @@ mod tests {
       ]
     );
     check_node(&node_ko, &mut check);
-    assert_eq!(check.has_warnings(), true);
+    assert_eq!(check.has_errors(), true);
   }
 
   #[test]
@@ -256,7 +257,7 @@ mod tests {
       ]
     );
     check_node(&node_ok, &mut check);
-    assert_eq!(check.has_warnings(), false);
+    assert_eq!(check.has_errors(), false);
     
     let node_ko = (
       Node::new_node(&"a"),
@@ -278,6 +279,6 @@ mod tests {
       ]
     );
     check_node(&node_ko, &mut check);
-    assert_eq!(check.warning_count(), 2);
+    assert_eq!(check.error_count(), 2);
   }
 }
