@@ -65,5 +65,83 @@ pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
 mod tests {
   use super::*;
 
-  
+  fn fake_input(i: u32) -> InputMapping {
+    InputMapping {
+      from: Port::new(Node::In, i),
+      to: i
+    }
+  }
+
+  #[test]
+  fn test_check_input_duplicates() {
+    let mut check = CheckResult::new();
+    
+    let node_ok = (
+      Node::new_node(&"a"),
+      vec![
+        fake_input(1),
+        fake_input(2),
+        fake_input(3)
+      ],
+      vec![],
+      vec![]
+    );
+    check_node(&node_ok, &mut check);
+    assert_eq!(check.has_errors(), false);
+    
+    let node_ko = (
+      Node::new_node(&"a"),
+      vec![
+        fake_input(1),
+        fake_input(2),
+        fake_input(3),
+        fake_input(2),
+        fake_input(3)
+      ],
+      vec![],
+      vec![]
+    );
+    check_node(&node_ko, &mut check);
+    assert_eq!(check.has_errors(), true);
+  }
+
+  fn fake_output(i: u32) -> OutputMapping {
+    OutputMapping {
+      from: i,
+      to: Port::new(Node::Out, i)
+    }
+  }
+
+  #[test]
+  fn test_check_output_duplicates() {
+    let mut check = CheckResult::new();
+    
+    let node_ok = (
+      Node::new_node(&"a"),
+      vec![],
+      vec![
+        fake_output(1),
+        fake_output(2),
+        fake_output(3)
+      ],
+      vec![]
+    );
+    check_node(&node_ok, &mut check);
+    assert_eq!(check.has_errors(), false);
+    
+    let node_ko = (
+      Node::new_node(&"a"),
+      vec![],
+      vec![
+        fake_output(1),
+        fake_output(2),
+        fake_output(3),
+        fake_output(2),
+        fake_output(3)
+      ],
+      vec![]
+    );
+    check_node(&node_ko, &mut check);
+    assert_eq!(check.has_errors(), true);
+  }
 }
