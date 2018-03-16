@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::ops::FnOnce;
 
 use parser::ParsingTree;
 use parser::address::{Node, Port};
@@ -101,7 +100,7 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_check_node_on_JRO() {
+  fn test_check_node_on_jro() {
     let mut check = CheckResult::new();
     
     let node_ok = (
@@ -145,7 +144,7 @@ mod tests {
   }
 
   #[test]
-  fn test_check_node_on_ADD() {
+  fn test_check_node_on_add() {
     let mut check = CheckResult::new();
     
     let node_ok = (
@@ -189,7 +188,7 @@ mod tests {
   }
 
   #[test]
-  fn test_check_node_on_SUB() {
+  fn test_check_node_on_sub() {
     let mut check = CheckResult::new();
     
     let node_ok = (
@@ -233,7 +232,7 @@ mod tests {
   }
 
   #[test]
-  fn test_check_node_on_MOV() {
+  fn test_check_node_on_mov() {
     let mut check = CheckResult::new();
     
     let node_ok = (

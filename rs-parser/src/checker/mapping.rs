@@ -23,11 +23,158 @@ fn map_node_to_idx<'a>(parsingTree: &'a ParsingTree, index: &mut Index<'a>) {
   }
 }
 
+fn check_node_inputs(
+    result: &mut CheckResult,
+    node: &NodeBlock,
+    tree: &ParsingTree,
+    index: &Index) {
+  let this_id = match &node.0 {
+    &Node::Node(ref id) => id,
+    _ => panic!("Node of incorrect type")
+  };
+  let inputs = &node.1;
+  for input in inputs.iter() {
+    if let &Node::Node(ref src_id) = &input.from.node {
+      let is_match = index.get(src_id)
+        .map(|node_idx| &tree[*node_idx])
+        .map(|ref src_node| {
+          src_node.2.iter().any(|ref output|
+            // Output m: i -> n:j <=> Input n: m:i -> j
+            match &output.to.node {
+              &Node::Node(ref id) => 
+                id == this_id 
+                && output.from == input.from.port
+                && output.to.port == input.to,
+              _ => false
+            }
+          )
+        })
+        .unwrap_or(false);
+      if !is_match {
+        // TODO code display for input
+        result.add_error(
+          format!(
+            "No corresponding output for input {} of node {}",
+            "<in>"/*input*/, this_id));
+      }
+    }
+  }
+}
+
+fn check_node_outputs(
+    result: &mut CheckResult,
+    node: &NodeBlock,
+    tree: &ParsingTree,
+    index: &Index) {
+
+}
+
 pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
   let mut index = HashMap::new();
   {
     map_node_to_idx(&tree, &mut index);
   }
 
-	true
+  let initial_count = result.error_count();
+  for node in tree.iter() {
+    check_node_inputs(result, node, tree, &index);
+    check_node_outputs(result, node, tree, &index);
+  }
+  
+	result.error_count() == initial_count
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_check_valid_inputs() {
+    let mut check_result = CheckResult::new();
+    
+    let src = (
+      Node::new_node(&"a"),
+      vec![],
+      vec![
+        OutputMapping {
+          from: 1,
+          to: Port {
+            node: Node::new_node(&"b"),
+            port: 2
+          }
+        }
+      ],
+      vec![]
+    );
+    let dst = (
+      Node::new_node(&"b"),
+      vec![
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 1
+          },
+          to: 2
+        }
+      ],
+      vec![],
+      vec![]
+    );
+    let tree = vec![src, dst];
+    let result = check(&tree, &mut check_result);
+    assert_eq!(result, true);
+    assert_eq!(check_result.has_errors(), false);
+  }
+
+  #[test]
+  fn test_check_invalid_inputs() {
+    let mut check_result = CheckResult::new();
+    
+    let src = (
+      Node::new_node(&"a"),
+      vec![],
+      vec![
+        OutputMapping {
+          from: 1,
+          to: Port {
+            node: Node::new_node(&"b"),
+            port: 3
+          }
+        },
+        OutputMapping {
+          from: 4,
+          to: Port {
+            node: Node::new_node(&"b"),
+            port: 2
+          }
+        },
+        OutputMapping {
+          from: 1,
+          to: Port {
+            node: Node::new_node(&"c"),
+            port: 2
+          }
+        }
+      ],
+      vec![]
+    );
+    let dst = (
+      Node::new_node(&"b"),
+      vec![
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 1
+          },
+          to: 2
+        }
+      ],
+      vec![],
+      vec![]
+    );
+    let tree = vec![src, dst];
+    let result = check(&tree, &mut check_result);
+    assert_eq!(result, false);
+    assert_eq!(check_result.has_errors(), true);
+  }
 }
