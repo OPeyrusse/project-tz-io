@@ -24,28 +24,38 @@ impl CheckResult {
 		self.warnings.push(message);
 	}
 
-	fn has_errors(&self) -> bool {
+	pub fn has_errors(&self) -> bool {
 		!self.errors.is_empty()
 	}
 
-	fn has_warnings(&self) -> bool {
+	pub fn has_warnings(&self) -> bool {
 		!self.warnings.is_empty()
 	}
 
-	fn error_count(&self) -> usize {
+	pub fn error_count(&self) -> usize {
 		self.errors.len()
 	}
 
-	fn warning_count(&self) -> usize {
+	pub fn warning_count(&self) -> usize {
 		self.warnings.len()
+	}
+
+	pub fn print_report(&self) {
+		println!(" == TZIO compiler == ");
+		if self.has_warnings() {
+			println!("Warnings in your project");
+		}
+		if self.has_errors() {
+			println!("Errors in your project");
+		}
 	}
 }
 
-pub fn check(parsing_tree: &ParsingResult) {
+pub fn check(parsing_tree: &ParsingResult) -> CheckResult {
+	let mut checks = CheckResult::new();
 	match parsing_tree {
 		&Result::Ok(ref res) => {
 			println!("{:?}", res);
-			let mut checks = CheckResult::new();
 			if !mapping::check(res, &mut checks) {
 				println!(" -> Mapping errors ...")
 			}
@@ -55,14 +65,81 @@ pub fn check(parsing_tree: &ParsingResult) {
 			if !instruction::check(res, &mut checks) {
 				println!(" -> Instruction errors ...")
 			}
-			if checks.has_warnings() {
-				println!("Warnings in your project");
-			}
-			if checks.has_errors() {
-				println!("Errors in your project");
-				panic!("Exit after errors");
-			}
 		},
-		&Result::Err(ref e) => println!("Failure: {:?}", e)
+		&Result::Err(ref e) => checks.add_error(
+			format!("Parsing failure: {:?}", e))
+	};
+
+	checks
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use parser::address::{Node, Port};
+	use parser::syntax::{InputMapping, OutputMapping};
+	use parser::instruction::{Operation, ValuePointer};
+
+	#[test]
+	fn test_complete_check_stack() {
+    let src = (
+      Node::new_node(&"a"),
+      vec![
+				InputMapping {
+					from: Port {
+						node: Node::In,
+						port: 1
+					},
+					to: 1
+				}
+			],
+      vec![
+        OutputMapping {
+          from: 1,
+          to: Port {
+            node: Node::new_node(&"b"),
+            port: 2
+          }
+        }
+      ],
+      vec![
+				Operation::MOV(ValuePointer::PORT(1), ValuePointer::PORT(1))
+			]
+    );
+    let dst = (
+      Node::new_node(&"b"),
+      vec![
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 1
+          },
+          to: 2
+        }
+      ],
+      vec![
+				OutputMapping {
+					from: 2,
+					to: Port {
+						node: Node::Out,
+						port: 3
+					}
+				}
+			],
+      vec![
+				Operation::MOV(ValuePointer::PORT(2), ValuePointer::PORT(2))
+			]
+    );
+    let tree = Result::Ok(vec![src, dst]);
+    let result = check(&tree);
+    assert_eq!(result.has_errors(), false);
 	}
+
+	#[test]
+	fn test_complete_stack_with_error() {
+		let tree = Result::Err(());
+		let result = check(&tree);
+		assert_eq!(result.has_errors(), true);
+	}
+
 }

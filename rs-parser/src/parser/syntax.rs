@@ -2,7 +2,7 @@ use nom::{space};
 
 use parser::common::{RawData, be_uint, ospace, eol, opt_eol};
 use parser::address::{Node, Port, node_header, port_ref};
-use parser::instruction::{parse_instruction, Operation, ValuePointer, MemoryPointer};
+use parser::instruction::{parse_instruction, Operation};
 use parser::instruction::condition::label_operation;
 
 #[derive(Debug, PartialEq)]
@@ -126,7 +126,9 @@ named!(pub node_list<&RawData, Vec<NodeBlock> >,
 #[cfg(test)]
 mod tests {
 	use super::*;
+
 	use parser::common::tests::{assert_result, assert_full_result};
+	use parser::instruction::{ValuePointer, MemoryPointer};
 
 	#[test]
 	fn test_parse_node_line() {

@@ -1,7 +1,7 @@
 use nom::{alphanumeric, space};
 
 use parser::common::{RawData, ospace, to_string};
-use parser::instruction::{ValuePointer, Operation};
+use parser::instruction::Operation;
 use parser::instruction::base::{
 	acc_pointer,
 	nil_pointer,
@@ -51,6 +51,7 @@ mod tests {
 	use super::*;
 
 	use parser::common::tests::*;
+	use parser::instruction::ValuePointer;
 
 	#[test]
 	fn test_parse_label_operation() {

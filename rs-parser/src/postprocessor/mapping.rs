@@ -5,99 +5,99 @@ use parser::address::{Node, Port};
 use parser::syntax::{NodeBlock, InputMapping, OutputMapping};
 
 type Index<'a> = HashMap<&'a String, usize>;
-fn map_node_to_idx<'a>(parsingTree: &'a ParsingTree, index: &mut Index<'a>) {
-  for (i, &(ref node, _, _, _)) in parsingTree.iter().enumerate() {
+fn map_node_to_idx<'a>(tree: &'a ParsingTree, index: &mut Index<'a>) {
+  for (i, &(ref node, _, _, _)) in tree.iter().enumerate() {
     if let &Node::Node(ref nodeId) = node {
       index.insert(nodeId, i);
     }
   }
 }
 
-fn complete_inputs(parsingTree: &mut ParsingTree, index: &Index) {
+fn complete_inputs(tree: &mut ParsingTree, index: &Index) {
   let mut additions = Vec::new();
-  for mut node in parsingTree.iter() {
+  for node in tree.iter() {
     // Read outputs and add them to their sources
     let outputs: &Vec<OutputMapping> = &node.2;
     for output in outputs.iter() {
-      if let Node::Node(ref nodeId) = output.to.node {
-        match index.get(nodeId) {
+      if let Node::Node(ref node_id) = output.to.node {
+        match index.get(node_id) {
           Some(idx) => {
-            let input_node = &parsingTree[*idx];
-            let addtional_input = complete_input(input_node, nodeId, output.to.port, output.from);
+            let input_node = &tree[*idx];
+            let addtional_input = complete_input(input_node, node_id, output.to.port, output.from);
             if let Some(i) = addtional_input {
               additions.push((*idx, i));
             }
           },
-          _ => panic!("No reference to node {}", nodeId)
+          _ => panic!("No reference to node {}", node_id)
         }
       }
     }
   }
 
   for (i, output) in additions {
-    let output_node = &mut parsingTree[i];
+    let output_node = &mut tree[i];
     output_node.1.push(output);
   }
 }
 
-fn complete_input(node: &NodeBlock, targetId: &String, from: u32, to: u32) -> Option<InputMapping> {
+fn complete_input(node: &NodeBlock, target_id: &String, from: u32, to: u32) -> Option<InputMapping> {
   // Skip if the port is already present
   let inputs: &Vec<InputMapping> = &node.1;
   if !inputs.iter().any(|input| match input.from.node {
-    Node::Node(ref id) => id == targetId && input.from.port == from,
+    Node::Node(ref id) => id == target_id && input.from.port == from,
     _ => false
   }) {
-    Some(InputMapping {  
-      from: Port { 
-        node: Node::new_node(targetId.as_str()), 
-        port: from 
+    Some(InputMapping {
+      from: Port {
+        node: Node::new_node(target_id.as_str()),
+        port: from
       },
-      to: to 
+      to: to
     })
   } else {
     None
   }
 }
 
-fn complete_outputs(parsingTree: &mut ParsingTree, index: &Index) {
+fn complete_outputs(tree: &mut ParsingTree, index: &Index) {
   let mut additions = Vec::new();
-  for mut node in parsingTree.iter() {
+  for node in tree.iter() {
     // Read inputs and add them to the source
     let inputs: &Vec<InputMapping> = &node.1;
     for input in inputs.iter() {
-      if let Node::Node(ref nodeId) = input.from.node {
-        match index.get(nodeId) {
+      if let Node::Node(ref node_id) = input.from.node {
+        match index.get(node_id) {
           Some(idx) => {
-            let output_node = &parsingTree[*idx];
-            let addtional_output = complete_output(output_node, input.from.port, nodeId, input.to);
+            let output_node = &tree[*idx];
+            let addtional_output = complete_output(output_node, input.from.port, node_id, input.to);
             if let Some(o) = addtional_output {
               additions.push((*idx, o));
             }
           },
-          _ => panic!("No reference to node {}", nodeId)
+          _ => panic!("No reference to node {}", node_id)
         }
       }
     }
   }
 
   for (i, output) in additions {
-    let output_node = &mut parsingTree[i];
+    let output_node = &mut tree[i];
     output_node.2.push(output);
   }
 }
 
-fn complete_output(node: &NodeBlock, from: u32, targetId: &String, to: u32) -> Option<OutputMapping> {
+fn complete_output(node: &NodeBlock, from: u32, target_id: &String, to: u32) -> Option<OutputMapping> {
   // Skip if the port is already present
   let outputs: &Vec<OutputMapping> = &node.2;
   if !outputs.iter().any(|output| match output.to.node {
-    Node::Node(ref id) => id == targetId && output.to.port == to,
+    Node::Node(ref id) => id == target_id && output.to.port == to,
     _ => false
   }) {
-    Some(OutputMapping { 
-      from: from, 
-      to: Port { 
-        node: Node::new_node(targetId.as_str()), 
-        port: to 
+    Some(OutputMapping {
+      from: from,
+      to: Port {
+        node: Node::new_node(target_id.as_str()),
+        port: to
       }
     })
   } else {
@@ -105,17 +105,17 @@ fn complete_output(node: &NodeBlock, from: u32, targetId: &String, to: u32) -> O
   }
 }
 
-pub fn complete_mappings(parsingTree: &mut ParsingTree) {
+pub fn complete_mappings(tree: &mut ParsingTree) {
   let mut nodes = HashMap::new();
   // {
-  //   map_node_to_idx(&parsingTree, &mut nodes);
+  //   map_node_to_idx(&tree, &mut nodes);
   // }
 
   {
-    complete_inputs(parsingTree, &nodes);
+    complete_inputs(tree, &nodes);
   }
 
   {
-    complete_outputs(parsingTree, &nodes);
+    complete_outputs(tree, &nodes);
   }
 }

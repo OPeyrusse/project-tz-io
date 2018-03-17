@@ -1,15 +1,14 @@
 use std::collections::HashSet;
 
 use parser::ParsingTree;
-use parser::address::{Node, Port};
-use parser::syntax::{NodeBlock, InputMapping, OutputMapping};
+use parser::syntax::NodeBlock;
 use checker::CheckResult;
 
 /// Module checking that the ports referenced by inputs
 /// or outputs for duplicated port numbers.
 
 fn check_ports<T, F: Fn(&T) -> u32>(
-    inputs: &Vec<T>, 
+    inputs: &Vec<T>,
     accessor: F) -> HashSet<u32> {
   let mut values = HashSet::new();
   let mut duplicates = HashSet::new();
@@ -49,7 +48,7 @@ pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
   let initial_count = result.error_count();
   for node in tree {
     check_node(node, result);
-  } 
+  }
 
   initial_count == result.error_count()
 }
@@ -57,6 +56,9 @@ pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  use parser::address::{Node, Port};
+  use parser::syntax::{InputMapping, OutputMapping};
 
   fn fake_input(i: u32) -> InputMapping {
     InputMapping {
@@ -68,7 +70,7 @@ mod tests {
   #[test]
   fn test_check_input_duplicates() {
     let mut check = CheckResult::new();
-    
+
     let node_ok = (
       Node::new_node(&"a"),
       vec![
@@ -81,7 +83,7 @@ mod tests {
     );
     check_node(&node_ok, &mut check);
     assert_eq!(check.has_errors(), false);
-    
+
     let node_ko = (
       Node::new_node(&"a"),
       vec![
@@ -108,7 +110,7 @@ mod tests {
   #[test]
   fn test_check_output_duplicates() {
     let mut check = CheckResult::new();
-    
+
     let node_ok = (
       Node::new_node(&"a"),
       vec![],
@@ -121,7 +123,7 @@ mod tests {
     );
     check_node(&node_ok, &mut check);
     assert_eq!(check.has_errors(), false);
-    
+
     let node_ko = (
       Node::new_node(&"a"),
       vec![],

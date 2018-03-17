@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use parser::ParsingTree;
-use parser::address::{Node, Port};
+use parser::address::Node;
 use parser::syntax::{NodeBlock, InputMapping, OutputMapping};
 use parser::instruction::{ValuePointer, Operation};
 use checker::CheckResult;
@@ -19,7 +19,7 @@ fn collect_output_ports(outputs: &Vec<OutputMapping>) -> HashSet<u32> {
 }
 
 // fn test_pointer<F: FnOnce(u32) -> String>(
-//     result: &mut CheckResult, 
+//     result: &mut CheckResult,
 //     inputs: &HashSet<u32>,
 //     pointer: &ValuePointer,
 //     fmt: F) {
@@ -31,10 +31,10 @@ fn collect_output_ports(outputs: &Vec<OutputMapping>) -> HashSet<u32> {
 // }
 
 fn test_input(
-    result: &mut CheckResult, 
+    result: &mut CheckResult,
     inputs: &HashSet<u32>,
     node: &Node,
-    op: &Operation, 
+    op: &Operation,
     pointer: &ValuePointer) {
   if let &ValuePointer::PORT(ref port) = pointer {
     if !inputs.contains(port) {
@@ -47,10 +47,10 @@ fn test_input(
 }
 
 fn test_output(
-    result: &mut CheckResult, 
+    result: &mut CheckResult,
     outputs: &HashSet<u32>,
     node: &Node,
-    op: &Operation, 
+    op: &Operation,
     pointer: &ValuePointer) {
   if let &ValuePointer::PORT(ref port) = pointer {
     if !outputs.contains(port) {
@@ -83,14 +83,14 @@ fn check_node(node: &NodeBlock, result: &mut CheckResult) {
       },
       _ => {}
     }
-  } 
+  }
 }
 
 pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
   let initial_count = result.error_count();
   for node in tree {
     check_node(node, result);
-  } 
+  }
 
   initial_count == result.error_count()
 }
@@ -99,10 +99,12 @@ pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
 mod tests {
   use super::*;
 
+  use parser::address::Port;
+
   #[test]
   fn test_check_node_on_jro() {
     let mut check = CheckResult::new();
-    
+
     let node_ok = (
       Node::new_node(&"a"),
       vec![
@@ -120,7 +122,7 @@ mod tests {
     );
     check_node(&node_ok, &mut check);
     assert_eq!(check.has_errors(), false);
-    
+
     let node_ko = (
       Node::new_node(&"a"),
       vec![
@@ -146,7 +148,7 @@ mod tests {
   #[test]
   fn test_check_node_on_add() {
     let mut check = CheckResult::new();
-    
+
     let node_ok = (
       Node::new_node(&"a"),
       vec![
@@ -164,7 +166,7 @@ mod tests {
     );
     check_node(&node_ok, &mut check);
     assert_eq!(check.has_errors(), false);
-    
+
     let node_ko = (
       Node::new_node(&"a"),
       vec![
@@ -190,7 +192,7 @@ mod tests {
   #[test]
   fn test_check_node_on_sub() {
     let mut check = CheckResult::new();
-    
+
     let node_ok = (
       Node::new_node(&"a"),
       vec![
@@ -208,7 +210,7 @@ mod tests {
     );
     check_node(&node_ok, &mut check);
     assert_eq!(check.has_errors(), false);
-    
+
     let node_ko = (
       Node::new_node(&"a"),
       vec![
@@ -234,7 +236,7 @@ mod tests {
   #[test]
   fn test_check_node_on_mov() {
     let mut check = CheckResult::new();
-    
+
     let node_ok = (
       Node::new_node(&"a"),
       vec![
@@ -257,7 +259,7 @@ mod tests {
     );
     check_node(&node_ok, &mut check);
     assert_eq!(check.has_errors(), false);
-    
+
     let node_ko = (
       Node::new_node(&"a"),
       vec![

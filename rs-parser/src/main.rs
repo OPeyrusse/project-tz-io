@@ -26,7 +26,11 @@ fn process_file(filename: &str) -> parser::ParsingResult {
 			postprocessor::process(&mut r);
 			r
 		});
-	checker::check(&result);
+	let check_result = checker::check(&result);
+	check_result.print_report();
+	if check_result.has_errors() {
+		panic!("Exit after errors");
+	}
 	result
 }
 

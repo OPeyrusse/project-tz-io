@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use parser::ParsingTree;
-use parser::address::{Node, Port};
-use parser::syntax::{NodeBlock, InputMapping, OutputMapping};
+use parser::address::Node;
+use parser::syntax::NodeBlock;
 use checker::CheckResult;
 
 /// Module checking that the mappings between the various nodes
@@ -15,10 +15,10 @@ use checker::CheckResult;
 
 type Index<'a> = HashMap<&'a String, usize>;
 // TODO move this method to some utility module
-fn map_node_to_idx<'a>(parsingTree: &'a ParsingTree, index: &mut Index<'a>) {
-  for (i, &(ref node, _, _, _)) in parsingTree.iter().enumerate() {
-    if let &Node::Node(ref nodeId) = node {
-      index.insert(nodeId, i);
+fn map_node_to_idx<'a>(tree: &'a ParsingTree, index: &mut Index<'a>) {
+  for (i, &(ref node, _, _, _)) in tree.iter().enumerate() {
+    if let &Node::Node(ref node_id) = node {
+      index.insert(node_id, i);
     }
   }
 }
@@ -41,8 +41,8 @@ fn check_node_inputs(
           src_node.2.iter().any(|ref output|
             // Output m: i -> n:j <=> Input n: m:i -> j
             match &output.to.node {
-              &Node::Node(ref id) => 
-                id == this_id 
+              &Node::Node(ref id) =>
+                id == this_id
                 && output.from == input.from.port
                 && output.to.port == input.to,
               _ => false
@@ -66,7 +66,37 @@ fn check_node_outputs(
     node: &NodeBlock,
     tree: &ParsingTree,
     index: &Index) {
-
+  let this_id = match &node.0 {
+    &Node::Node(ref id) => id,
+    _ => panic!("Node of incorrect type")
+  };
+  let outputs = &node.2;
+  for output in outputs.iter() {
+    if let &Node::Node(ref src_id) = &output.to.node {
+      let is_match = index.get(src_id)
+        .map(|node_idx| &tree[*node_idx])
+        .map(|ref dst_node| {
+          dst_node.1.iter().any(|ref input|
+            // Output m: i -> n:j <=> Input n: m:i -> j
+            match &input.from.node {
+              &Node::Node(ref id) =>
+                id == this_id
+                && input.from.port == output.from
+                && input.to == output.to.port,
+              _ => false
+            }
+          )
+        })
+        .unwrap_or(false);
+      if !is_match {
+        // TODO code display for input
+        result.add_error(
+          format!(
+            "No corresponding output for input {} of node {}",
+            "<in>"/*input*/, this_id));
+      }
+    }
+  }
 }
 
 pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
@@ -80,18 +110,20 @@ pub fn check(tree: &ParsingTree, result: &mut CheckResult) -> bool {
     check_node_inputs(result, node, tree, &index);
     check_node_outputs(result, node, tree, &index);
   }
-  
+
 	result.error_count() == initial_count
 }
 
 #[cfg(test)]
 mod tests {
   use super::*;
+  use parser::address::Port;
+  use parser::syntax::{InputMapping, OutputMapping};
 
   #[test]
-  fn test_check_valid_inputs() {
+  fn test_check_valid_mappings() {
     let mut check_result = CheckResult::new();
-    
+
     let src = (
       Node::new_node(&"a"),
       vec![],
@@ -127,22 +159,30 @@ mod tests {
   }
 
   #[test]
-  fn test_check_invalid_inputs() {
+  fn test_check_invalid_mappings() {
     let mut check_result = CheckResult::new();
-    
+
     let src = (
       Node::new_node(&"a"),
-      vec![],
+      vec![
+        InputMapping {
+          from: Port {
+            node: Node::In,
+            port: 1
+          },
+          to: 1
+        }
+      ],
       vec![
         OutputMapping {
           from: 1,
           to: Port {
             node: Node::new_node(&"b"),
-            port: 3
+            port: 3 // Incorrect port
           }
         },
         OutputMapping {
-          from: 4,
+          from: 4, // Incorrect port
           to: Port {
             node: Node::new_node(&"b"),
             port: 2
@@ -151,7 +191,7 @@ mod tests {
         OutputMapping {
           from: 1,
           to: Port {
-            node: Node::new_node(&"c"),
+            node: Node::new_node(&"c"),  // Incorrect name
             port: 2
           }
         }
@@ -169,12 +209,20 @@ mod tests {
           to: 2
         }
       ],
-      vec![],
+      vec![
+        OutputMapping {
+          from: 1,
+          to: Port {
+            node: Node::Out,
+            port: 1
+          }
+        }
+      ],
       vec![]
     );
     let tree = vec![src, dst];
     let result = check(&tree, &mut check_result);
     assert_eq!(result, false);
-    assert_eq!(check_result.has_errors(), true);
+    assert_eq!(check_result.error_count(), 4);
   }
 }
