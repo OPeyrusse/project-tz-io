@@ -156,6 +156,40 @@ mod tests {
     let result = check(&tree, &mut check_result);
     assert_eq!(result, true);
     assert_eq!(check_result.has_errors(), false);
+    let mut check_result = CheckResult::new();
+
+    let src = (
+      Node::new_node(&"a"),
+      vec![],
+      vec![
+        OutputMapping {
+          from: 1,
+          to: Port {
+            node: Node::new_node(&"b"),
+            port: 2
+          }
+        }
+      ],
+      vec![]
+    );
+    let dst = (
+      Node::new_node(&"b"),
+      vec![
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 1
+          },
+          to: 2
+        }
+      ],
+      vec![],
+      vec![]
+    );
+    let tree = vec![src, dst];
+    let result = check(&tree, &mut check_result);
+    assert_eq!(result, true);
+    assert_eq!(check_result.has_errors(), false);
   }
 
   #[test]

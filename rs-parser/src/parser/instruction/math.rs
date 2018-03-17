@@ -1,7 +1,7 @@
 use nom::{space};
 
 use parser::common::RawData;
-use parser::instruction::{ValuePointer, Operation};
+use parser::instruction::Operation;
 use parser::instruction::base::{
 	value_pointer,
 	input_pointer,
@@ -34,6 +34,7 @@ mod tests {
 	use super::*;
 
 	use parser::common::tests::*;
+	use parser::instruction::ValuePointer;
 
 	#[test]
 	fn test_parse_add_operation_with_value() {

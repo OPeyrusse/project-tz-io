@@ -1,7 +1,7 @@
 use nom::space;
 
 use parser::common::{RawData, ospace};
-use parser::instruction::{ValuePointer, Operation};
+use parser::instruction::Operation;
 use parser::instruction::base::*;
 
 named!(mov_from_in<&RawData, Operation>,
@@ -38,7 +38,9 @@ named!(pub mov_operation<&RawData, Operation>,
 #[cfg(test)]
 mod tests {
   use super::*;
+
   use parser::common::tests::*;
+  use parser::instruction::ValuePointer;
 
   #[test]
   fn test_parse_mov_in_to_out() {
