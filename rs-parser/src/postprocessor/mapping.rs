@@ -13,7 +13,7 @@ fn map_node_to_idx<'a>(tree: &'a ParsingTree, index: &mut Index<'a>) {
   }
 }
 
-fn complete_inputs(tree: &mut ParsingTree, index: &Index) {
+fn complete_inputs(mut tree: ParsingTree, index: &Index) -> ParsingTree {
   let mut additions = Vec::new();
   for node in tree.iter() {
     // Read outputs and add them to their sources
@@ -38,6 +38,8 @@ fn complete_inputs(tree: &mut ParsingTree, index: &Index) {
     let output_node = &mut tree[i];
     output_node.1.push(output);
   }
+
+  tree
 }
 
 fn complete_input(node: &NodeBlock, target_id: &String, from: u32, to: u32) -> Option<InputMapping> {
@@ -59,7 +61,7 @@ fn complete_input(node: &NodeBlock, target_id: &String, from: u32, to: u32) -> O
   }
 }
 
-fn complete_outputs(tree: &mut ParsingTree, index: &Index) {
+fn complete_outputs(mut tree: ParsingTree, index: &Index) -> ParsingTree{
   let mut additions = Vec::new();
   for node in tree.iter() {
     // Read inputs and add them to the source
@@ -84,6 +86,8 @@ fn complete_outputs(tree: &mut ParsingTree, index: &Index) {
     let output_node = &mut tree[i];
     output_node.2.push(output);
   }
+
+  tree
 }
 
 fn complete_output(node: &NodeBlock, from: u32, target_id: &String, to: u32) -> Option<OutputMapping> {
@@ -105,17 +109,14 @@ fn complete_output(node: &NodeBlock, from: u32, target_id: &String, to: u32) -> 
   }
 }
 
-pub fn complete_mappings(tree: &mut ParsingTree) {
+pub fn complete_mappings(tree: ParsingTree) -> ParsingTree {
   let mut nodes = HashMap::new();
-  // {
-  //   map_node_to_idx(&tree, &mut nodes);
-  // }
-
   {
-    complete_inputs(tree, &nodes);
+    map_node_to_idx(&tree, &mut nodes);
   }
 
-  {
-    complete_outputs(tree, &nodes);
-  }
+  let tree = complete_inputs(tree, &nodes);
+  let tree = complete_outputs(tree, &nodes);
+
+  tree
 }
