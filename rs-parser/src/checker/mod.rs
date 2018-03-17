@@ -57,14 +57,15 @@ pub fn check(parsing_tree: &ParsingResult) -> CheckResult {
 		&Result::Ok(ref res) => {
 			println!("{:?}", res);
 			if !mapping::check(res, &mut checks) {
-				println!(" -> Mapping errors ...")
+				checks.add_error(String::from(" -> Mapping errors ..."));
 			}
 			if !interface::check(res, &mut checks) {
-				println!(" -> Node interface errors ...")
+				checks.add_error(String::from(" -> Node interface errors ..."));
 			}
 			if !instruction::check(res, &mut checks) {
-				println!(" -> Instruction errors ...")
+				checks.add_error(String::from(" -> Instruction errors ..."));
 			}
+			// TODO check that the same input/output port is not used by many nodes
 		},
 		&Result::Err(ref e) => checks.add_error(
 			format!("Parsing failure: {:?}", e))

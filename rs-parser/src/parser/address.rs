@@ -29,6 +29,13 @@ impl Node {
 		Node::Node(name.to_string())
 	}
 
+	pub fn get_id<'a>(&'a self) -> &'a String {
+		match self {
+			&Node::Node(ref id) => id,
+			_ => panic!("Not a named node: {}", self)
+		}
+	}
+
 	fn do_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
       &Node::In => write!(f, "<IN>"),

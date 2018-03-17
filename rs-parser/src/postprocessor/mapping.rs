@@ -19,16 +19,17 @@ fn map_node_to_idx<'a>(tree: &ParsingTree) -> Index {
 fn complete_inputs(mut tree: ParsingTree, index: &Index) -> ParsingTree {
   let mut additions = Vec::new();
   for node in tree.iter() {
+    let this_id = &node.0.get_id();
     // Read outputs and add them to their sources
     let outputs: &Vec<OutputMapping> = &node.2;
     for output in outputs.iter() {
-      if let &Node::Node(ref src_id) = &output.to.node {
-        let idx = index.get(src_id).unwrap_or_else(|| panic!("No reference to node {}", src_id));
+      if let &Node::Node(ref dst_id) = &output.to.node {
+        let idx = index.get(dst_id).unwrap_or_else(|| panic!("No reference to node {}", dst_id));
         let dst_node = &tree[*idx];
         // this output m: i -> n:j => input n: m:i -> j
-        let addtional_input = complete_input(dst_node, src_id, output.from, output.to.port);
-        if let Some(i) = addtional_input {
-          additions.push((*idx, i));
+        let addtional_input = complete_input(dst_node, this_id, output.from, output.to.port);
+        if let Some(input) = addtional_input {
+          additions.push((*idx, input));
         }
       }
     }
@@ -65,13 +66,14 @@ fn complete_input(node: &NodeBlock, src_id: &String, from: u32, to: u32) -> Opti
 fn complete_outputs(mut tree: ParsingTree, index: &Index) -> ParsingTree{
   let mut additions = Vec::new();
   for node in tree.iter() {
+    let this_id = &node.0.get_id();
     // Read inputs and add them to the source
     let inputs: &Vec<InputMapping> = &node.1;
     for input in inputs.iter() {
       if let Node::Node(ref dst_id) = input.from.node {
         let idx = index.get(dst_id).unwrap_or_else(|| panic!("No reference to node {}", dst_id));
         let src_node = &tree[*idx];
-        let addtional_output = complete_output(src_node, dst_id, input.from.port, input.to);
+        let addtional_output = complete_output(src_node, this_id, input.from.port, input.to);
         if let Some(o) = addtional_output {
           additions.push((*idx, o));
         }
@@ -159,6 +161,47 @@ mod tests {
           port: 1
         },
         to: 2
+      }
+    ]);
+  }
+
+  #[test]
+  fn test_complete_node_outputs() {
+    let src = (
+      Node::new_node(&"a"),
+      vec![],
+      vec![],
+      vec![]
+    );
+    let dst = (
+      Node::new_node(&"b"),
+      vec![
+        InputMapping {
+          from: Port {
+            node: Node::In,
+            port: 1
+          },
+          to: 1
+        },
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 1
+          },
+          to: 2
+        }
+      ],
+      vec![],
+      vec![]
+    );
+    let tree = complete_mappings(vec![src, dst]);
+    assert_eq!(tree[0].2, vec![
+      OutputMapping {
+        from: 1,
+        to: Port {
+          node: Node::new_node(&"b"),
+          port: 2
+        }
       }
     ]);
   }
