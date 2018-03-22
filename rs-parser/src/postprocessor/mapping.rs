@@ -206,4 +206,69 @@ mod tests {
     ]);
   }
 
+  #[test]
+  fn test_complete_partial_definitions() {
+    let src = (
+      Node::new_node(&"a"),
+      vec![],
+      vec![
+        OutputMapping {
+          from: 2,
+          to: Port {
+            node: Node::new_node(&"b"),
+            port: 2
+          }
+        }
+      ],
+      vec![]
+    );
+    let dst = (
+      Node::new_node(&"b"),
+      vec![
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 1
+          },
+          to: 1
+        }
+      ],
+      vec![],
+      vec![]
+    );
+    let tree = complete_mappings(vec![src, dst]);
+    assert_eq!(tree[0].2, vec![
+      OutputMapping {
+        from: 2,
+        to: Port {
+          node: Node::new_node(&"b"),
+          port: 2
+        }
+      },
+      OutputMapping {
+        from: 1,
+        to: Port {
+          node: Node::new_node(&"b"),
+          port: 1
+        }
+      }
+    ]);
+    assert_eq!(tree[1].1, vec![
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 1
+          },
+          to: 1
+        },
+        InputMapping {
+          from: Port {
+            node: Node::new_node(&"a"),
+            port: 2
+          },
+          to: 2
+        }
+    ]);
+  }
+
 }

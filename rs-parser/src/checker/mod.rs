@@ -41,12 +41,22 @@ impl CheckResult {
 	}
 
 	pub fn print_report(&self) {
-		println!(" == TZIO compiler == ");
+		self.print_report_into(|msg| println!("{}", msg));
+	}
+
+	fn print_report_into<F: FnMut(&str)>(&self, mut out: F) {
+		out(&" == TZIO compiler == ");
 		if self.has_warnings() {
-			println!("Warnings in your project");
+			out(&"Warnings in your project");
+			for warning in &self.warnings {
+				out(&warning);
+			}
 		}
 		if self.has_errors() {
-			println!("Errors in your project");
+			out(&"Errors in your project");
+			for error in &self.errors {
+				out(&error);
+			}
 		}
 	}
 }
@@ -141,6 +151,45 @@ mod tests {
 		let tree = Result::Err(());
 		let result = check(&tree);
 		assert_eq!(result.has_errors(), true);
+	}
+
+	#[test]
+	fn test_checker_counts() {
+		let mut checks = CheckResult::new();
+		assert_eq!(checks.has_errors(), false);
+		assert_eq!(checks.has_warnings(), false);
+		assert_eq!(checks.error_count(), 0);
+		assert_eq!(checks.warning_count(), 0);
+
+		checks.add_error(String::from("e"));
+		assert_eq!(checks.has_errors(), true);
+		assert_eq!(checks.has_warnings(), false);
+		assert_eq!(checks.error_count(), 1);
+		assert_eq!(checks.warning_count(), 0);
+
+		checks.add_warning(String::from("w1"));
+		checks.add_warning(String::from("w2"));
+		assert_eq!(checks.has_errors(), true);
+		assert_eq!(checks.has_warnings(), true);
+		assert_eq!(checks.error_count(), 1);
+		assert_eq!(checks.warning_count(), 2);
+	}
+
+	#[test]
+	fn test_printing_report() {
+		let mut checks = CheckResult::new();
+		checks.add_error(String::from("e"));
+		checks.add_warning(String::from("w"));
+		let mut msgs = vec![];
+		checks.print_report_into(|msg| msgs.push(String::from(msg)));
+
+		assert_eq!(msgs, vec![
+			" == TZIO compiler == ",
+			"Warnings in your project",
+			"w",
+			"Errors in your project",
+			"e"
+		]);
 	}
 
 }
