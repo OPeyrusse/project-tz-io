@@ -4,13 +4,14 @@ import com.kineolyan.tzio.InputSlot;
 import com.kineolyan.tzio.Node;
 import com.kineolyan.tzio.OutputSlot;
 
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class SlotReference implements InputReference, OutputReference {
 
 	private static final SlotReference[] CACHE;
 	static {
-		CACHE = IntStream.range(0, 10)
+		CACHE = IntStream.range(1, 11)
 			.mapToObj(SlotReference::new)
 			.toArray(SlotReference[]::new);
 	}
@@ -18,7 +19,7 @@ public class SlotReference implements InputReference, OutputReference {
 	private final int slotIndex;
 
 	public SlotReference(final int slotIndex) {
-		this.slotIndex = slotIndex;
+		this.slotIndex = slotIndex - 1;
 	}
 
 	public static SlotReference of(final int id) {
@@ -55,5 +56,23 @@ public class SlotReference implements InputReference, OutputReference {
 	@Override
 	public void writeValue(final Node node, final int value) {
 		getOutput(node).write(value);
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "{slot=" + (this.slotIndex + 1) + "}";
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		SlotReference that = (SlotReference) o;
+		return slotIndex == that.slotIndex;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(slotIndex);
 	}
 }

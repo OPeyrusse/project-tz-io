@@ -42,4 +42,5 @@ public class NodeExecution {
 			targetLabel,
 			key -> { throw new IllegalArgumentException("No label named " + targetLabel); });
 	}
+
 }
