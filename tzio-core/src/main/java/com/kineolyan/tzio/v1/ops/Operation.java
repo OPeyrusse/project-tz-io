@@ -3,6 +3,9 @@ package com.kineolyan.tzio.v1.ops;
 import com.kineolyan.tzio.v1.Node;
 import com.kineolyan.tzio.v1.NodeExecution;
 
+import java.util.function.ObjIntConsumer;
+import java.util.function.ToIntFunction;
+
 /**
  * Description of an operation on a {@link Node}.
  */
@@ -35,12 +38,12 @@ public interface Operation {
 
 		/**
 		 * Gets the index of the next operation to execute.
-		 * @param execution node execution to consider
+		 * @param labelIndex index returning a
 		 * @param current current operation index
 		 * @param max max operation index - excluded
 		 * @return index of the next operation
 		 */
-		int update(NodeExecution execution, int current, int max);
+		int update(ToIntFunction<String> labelIndex, int current, int max);
 
 	}
 

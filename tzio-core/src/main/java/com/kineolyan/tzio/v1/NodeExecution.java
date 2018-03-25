@@ -52,7 +52,7 @@ public class NodeExecution {
 	public void runStep() {
 		final Operation operation = this.operations.get(this.stepIdx);
 		final Operation.Shift nextOperation = operation.execute(this.node);
-		this.stepIdx = nextOperation.update(this, this.stepIdx, this.operations.size());
+		this.stepIdx = nextOperation.update(this::getLabelOperationIdx, this.stepIdx, this.operations.size());
 	}
 
 	/**
