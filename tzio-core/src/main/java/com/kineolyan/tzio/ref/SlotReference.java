@@ -7,8 +7,12 @@ import com.kineolyan.tzio.OutputSlot;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
+/**
+ * Reference to a slot, either input or output.
+ */
 public class SlotReference implements InputReference, OutputReference {
 
+	/** Internal cache of references, commonly addressed */
 	private static final SlotReference[] CACHE;
 	static {
 		CACHE = IntStream.range(1, 11)
@@ -16,26 +20,47 @@ public class SlotReference implements InputReference, OutputReference {
 			.toArray(SlotReference[]::new);
 	}
 
+	/** 0-based index of the referenced slot */
 	private final int slotIndex;
 
-	public SlotReference(final int slotIndex) {
-		this.slotIndex = slotIndex - 1;
+	/**
+	 * Constructor
+	 * @param slotId id of the slot - 1-based counted.
+	 */
+	public SlotReference(final int slotId) {
+		this.slotIndex = slotId - 1;
 	}
 
+	/**
+	 * Static constructor.
+	 * @param id id of the slot - 1-based counted.
+	 * @return a reference
+	 */
 	public static SlotReference of(final int id) {
-		if (id < CACHE.length) {
-			return CACHE[id];
+		final int cacheIdx = id - 1;
+		if (cacheIdx < CACHE.length) {
+			return CACHE[cacheIdx];
 		} else {
 			return new SlotReference(id);
 		}
 	}
 
+	/**
+	 * Gets the referenced node input.
+	 * @param node node to consider
+	 * @return referenced input
+	 */
 	private InputSlot getInput(final Node node) {
-		return node.inputSlots[this.slotIndex];
+		return node.getInput(this.slotIndex);
 	}
 
+	/**
+	 * Gets the referenced node output.
+	 * @param node node to consider
+	 * @return referenced output
+	 */
 	private OutputSlot getOutput(final Node node) {
-		return node.outputSlots[this.slotIndex];
+		return node.getOutput(this.slotIndex);
 	}
 
 	@Override

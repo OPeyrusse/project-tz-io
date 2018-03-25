@@ -16,7 +16,7 @@ public class TzEnv {
 	public static int NO_OUTPUT = -1;
 
 	private Map<String, NodeExecution> nodes;
-	private Object[] slots;
+	private TransactionalElement[] slots;
 	private InputQueueSlot[] inputs;
 	private DataSlot[] outputs;
 	private Consumer<int[]> consumer;
@@ -30,9 +30,9 @@ public class TzEnv {
 		final int slotCount,
 		final int[] inputs,
 		final int[] outputs) {
-		final Object[] slots = IntStream.range(0, slotCount)
+		final TransactionalElement[] slots = IntStream.range(0, slotCount)
 			.mapToObj(i -> new DataSlot())
-			.toArray();
+			.toArray(TransactionalElement[]::new);
 		this.inputs = IntStream.of(inputs)
 			.mapToObj(i -> {
 				final InputQueueSlot inputSlot = new InputQueueSlot();
@@ -71,13 +71,18 @@ public class TzEnv {
 	}
 
 	public void consume(final int[] input) {
-		for (int i = 0; i < input.length; i += 1) {
+		for (int i = 0, end_ = Math.max(input.length, inputs.length); i < end_; i += 1) {
 			this.inputs[i].enqueue(input[i]);
 		}
 	}
 
 	public void tick() {
+		Stream.of(this.slots).forEach(TransactionalElement::onStepStart);
+
 		this.nodes.values().forEach(NodeExecution::runStep);
+		// Complete transaction for each element
+		Stream.of(this.slots).forEach(TransactionalElement::onStepEnd);
+
 		// Check for an output
 		if (Stream.of(this.outputs).anyMatch(DataSlot::canRead)) {
 			final int[] output = Stream.of(this.outputs)
