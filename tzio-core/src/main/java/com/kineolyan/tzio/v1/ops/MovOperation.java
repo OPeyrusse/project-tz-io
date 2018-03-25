@@ -1,8 +1,8 @@
-package com.kineolyan.tzio.ops;
+package com.kineolyan.tzio.v1.ops;
 
-import com.kineolyan.tzio.Node;
-import com.kineolyan.tzio.ref.InputReference;
-import com.kineolyan.tzio.ref.OutputReference;
+import com.kineolyan.tzio.v1.Node;
+import com.kineolyan.tzio.v1.ref.InputReference;
+import com.kineolyan.tzio.v1.ref.OutputReference;
 
 public class MovOperation implements Operation {
 

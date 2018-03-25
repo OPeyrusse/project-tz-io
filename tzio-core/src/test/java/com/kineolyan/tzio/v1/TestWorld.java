@@ -1,7 +1,7 @@
-package com.kineolyan.tzio;
+package com.kineolyan.tzio.v1;
 
-import com.kineolyan.tzio.ops.MovOperation;
-import com.kineolyan.tzio.ref.SlotReference;
+import com.kineolyan.tzio.v1.ops.MovOperation;
+import com.kineolyan.tzio.v1.ref.SlotReference;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

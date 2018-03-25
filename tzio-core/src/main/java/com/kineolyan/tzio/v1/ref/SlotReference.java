@@ -1,8 +1,8 @@
-package com.kineolyan.tzio.ref;
+package com.kineolyan.tzio.v1.ref;
 
-import com.kineolyan.tzio.InputSlot;
-import com.kineolyan.tzio.Node;
-import com.kineolyan.tzio.OutputSlot;
+import com.kineolyan.tzio.v1.InputSlot;
+import com.kineolyan.tzio.v1.Node;
+import com.kineolyan.tzio.v1.OutputSlot;
 
 import java.util.Objects;
 import java.util.stream.IntStream;

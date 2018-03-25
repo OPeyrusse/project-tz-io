@@ -1,6 +1,6 @@
-package com.kineolyan.tzio;
+package com.kineolyan.tzio.v1;
 
-import com.kineolyan.tzio.ops.Operation;
+import com.kineolyan.tzio.v1.ops.Operation;
 
 import java.util.HashMap;
 import java.util.List;

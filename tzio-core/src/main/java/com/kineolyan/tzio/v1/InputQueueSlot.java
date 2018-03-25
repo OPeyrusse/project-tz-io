@@ -1,4 +1,4 @@
-package com.kineolyan.tzio;
+package com.kineolyan.tzio.v1;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;

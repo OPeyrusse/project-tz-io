@@ -1,7 +1,7 @@
-package com.kineolyan.tzio.ops;
+package com.kineolyan.tzio.v1.ops;
 
-import com.kineolyan.tzio.Node;
-import com.kineolyan.tzio.NodeExecution;
+import com.kineolyan.tzio.v1.Node;
+import com.kineolyan.tzio.v1.NodeExecution;
 
 public interface Operation {
 

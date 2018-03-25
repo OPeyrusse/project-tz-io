@@ -1,6 +1,6 @@
-package com.kineolyan.tzio.ref;
+package com.kineolyan.tzio.v1.ref;
 
-import com.kineolyan.tzio.Node;
+import com.kineolyan.tzio.v1.Node;
 
 /**
  * Representation of a reference to an input.

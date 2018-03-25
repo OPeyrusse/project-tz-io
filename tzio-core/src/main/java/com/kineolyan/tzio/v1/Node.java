@@ -1,7 +1,7 @@
-package com.kineolyan.tzio;
+package com.kineolyan.tzio.v1;
 
-import com.kineolyan.tzio.ref.InputReference;
-import com.kineolyan.tzio.ref.OutputReference;
+import com.kineolyan.tzio.v1.ref.InputReference;
+import com.kineolyan.tzio.v1.ref.OutputReference;
 
 /**
  * Implementation of a node in the TZ-IO environment.
