@@ -1,9 +1,15 @@
 package com.kineolyan.tzio.v1;
 
+/**
+ * Input/Output slot storing a single value.
+ */
 public class DataSlot implements InputSlot, OutputSlot, TransactionalElement {
 
+	/** Value in the slot */
 	private int value = 0;
+	/** Flag marking that a value is currently stored */
 	private boolean hasValue = false;
+	/** Flag marking that the value has been consumed */
 	private boolean hasValueAfterStep = false;
 
 	@Override

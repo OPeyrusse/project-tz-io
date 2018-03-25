@@ -3,8 +3,16 @@ package com.kineolyan.tzio.v1;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
 
+/**
+ * Input slot storing many values.
+ * <p>
+ *   This slot mainly represents an system input, where data can come in but not be
+ *   immediately consumed by nodes.
+ * </p>
+ */
 public class InputQueueSlot implements InputSlot, TransactionalElement {
 
+	/** Stack of available values */
 	private Queue<Integer> values = new LinkedBlockingDeque<>();
 
 	/**
@@ -25,8 +33,4 @@ public class InputQueueSlot implements InputSlot, TransactionalElement {
 		return this.values.poll();
 	}
 
-	@Override
-	public void onStepEnd() {
-		// Nothing to do
-	}
 }

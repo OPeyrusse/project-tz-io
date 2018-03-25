@@ -2,10 +2,18 @@ package com.kineolyan.tzio.v1.ops;
 
 import com.kineolyan.tzio.v1.Node;
 
+/**
+ * Empty operation, serving as a label point for "goto" operators.
+ */
 public class LabelOperation implements Operation {
 
+	/** Label of the operation */
 	private final String label;
 
+	/**
+	 * Constructor
+	 * @param label operation label
+	 */
 	public LabelOperation(final String label) {
 		this.label = label;
 	}

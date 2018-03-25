@@ -7,13 +7,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Class executing operations on a given node.
+ */
 public class NodeExecution {
 
+	/** Node on which operations are executed */
 	private final Node node;
+	/** List of operations to execute on the node */
 	private final List<Operation> operations;
+	/** Index structure of labeled operations, as {@code [<operation label>] = <operation index>} */
 	private final Map<String, Integer> labels;
+	/** Index of the current operation */
 	private int stepIdx;
 
+	/**
+	 * Constructor
+	 * @param node node on which operations are executed
+	 * @param operations operation to execute on the node
+	 */
 	public NodeExecution(
 		final Node node,
 		final List<Operation> operations) {
@@ -31,16 +43,28 @@ public class NodeExecution {
 		}
 	}
 
+	/**
+	 * Runs the operation.
+	 * <p>
+	 *   It is possible for the same operation to be executed many times.
+	 * </p>
+	 */
 	public void runStep() {
 		final Operation operation = this.operations.get(this.stepIdx);
 		final Operation.Shift nextOperation = operation.execute(this.node);
 		this.stepIdx = nextOperation.update(this, this.stepIdx, this.operations.size());
 	}
 
+	/**
+	 * Gets the index of the label in the operation
+	 * @param targetLabel label to reach
+	 * @return the index of the operation to run after the label
+	 */
 	public int getLabelOperationIdx(final String targetLabel) {
-		return this.labels.computeIfAbsent(
+		final int index = this.labels.computeIfAbsent(
 			targetLabel,
-			key -> { throw new IllegalArgumentException("No label named " + targetLabel); });
+			label -> { throw new IllegalArgumentException("No operation named " + label); });
+		return index < this.operations.size() ? index : 0;
 	}
 
 }

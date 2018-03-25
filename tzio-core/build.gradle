@@ -21,7 +21,7 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'maven'
-apply plugin: 'org.junit.platform.gradle.plugin'
+//apply plugin: 'org.junit.platform.gradle.plugin'
 
 sourceCompatibility = 1.9
 
@@ -48,4 +48,13 @@ compileTestJava {
     sourceCompatibility = 1.9
     targetCompatibility = 1.9
     options.compilerArgs += '-parameters'
+}
+
+test {
+    useJUnitPlatform {
+        excludeTags 'slow'
+        includeEngines 'junit-jupiter', 'junit-vintage'
+    }
+
+    failFast = false
 }
