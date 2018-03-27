@@ -64,6 +64,11 @@ pub mod tests {
 	pub fn assert_full_result<Result: PartialEq + Debug> (
 			res: IResult<&[u8], Result>,
 			value: Result) {
+		if let &IResult::Done(ref remaining, _) = &res {
+			if remaining.len() > 0 {
+				println!("Unexpected remaining {}", str::from_utf8(remaining).unwrap());
+			}
+		}
 		assert_result(res, value, b"");
 	}
 

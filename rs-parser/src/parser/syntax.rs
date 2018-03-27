@@ -506,7 +506,16 @@ MOV <1,  >1
 ----------
 MOV <2, >2
 ----------
-2 -> OUT:1
+2 -> #3:3
+==========
+
+Node #3
+==========
+#2:2 -> 3
+----------
+MOV <3, >3
+----------
+3 -> OUT:1
 ==========
 
 ";
@@ -544,11 +553,29 @@ MOV <2, >2
 					vec![
 						OutputMapping {
 							from: 2,
-							to: Port::new(Node::Out, 1)
+							to: Port::named_port(&"3", 3)
 						}
 					],
 					vec![
 						Operation::MOV(ValuePointer::PORT(2), ValuePointer::PORT(2)),
+					]
+				),
+				(
+					Node::new_node("3"),
+					vec![
+						InputMapping {
+							from: Port::named_port(&"2", 2),
+							to: 3
+						}
+					],
+					vec![
+						OutputMapping {
+							from: 3,
+							to: Port::new(Node::Out, 1)
+						}
+					],
+					vec![
+						Operation::MOV(ValuePointer::PORT(3), ValuePointer::PORT(3)),
 					]
 				)
 			]
