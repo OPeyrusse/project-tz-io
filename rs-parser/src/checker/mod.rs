@@ -1,6 +1,7 @@
 mod mapping;
 mod instruction;
 mod interface;
+mod io;
 
 use std::result::Result;
 
@@ -74,6 +75,9 @@ pub fn check(parsing_tree: &ParsingResult) -> CheckResult {
 			}
 			if !instruction::check(res, &mut checks) {
 				checks.add_error(String::from(" -> Instruction errors ..."));
+			}
+			if !io::check(res, &mut checks) {
+				checks.add_error(String::from(" -> IOs errors ..."));
 			}
 			// TODO check that the same input/output port is not used by many nodes
 		},
