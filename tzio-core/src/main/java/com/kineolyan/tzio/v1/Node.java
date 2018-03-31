@@ -3,6 +3,9 @@ package com.kineolyan.tzio.v1;
 import com.kineolyan.tzio.v1.ref.InputReference;
 import com.kineolyan.tzio.v1.ref.OutputReference;
 
+import java.util.function.IntPredicate;
+import java.util.function.Predicate;
+
 /**
  * Implementation of a node in the TZ-IO environment.
  * <p>
@@ -86,6 +89,10 @@ public class Node {
 		changeValue(-source.readValue(this));
 	}
 
+	public final void negate() {
+		this.accValue = -this.accValue;
+	}
+
 	private final void changeValue(int value) {
 		this.accValue += value;
 	}
@@ -98,6 +105,10 @@ public class Node {
 		final int swp = this.accValue;
 		this.accValue = this.memorySlots[memorySlot];
 		this.memorySlots[memorySlot] = swp;
+	}
+
+	public final boolean testValue(final IntPredicate predicate) {
+		return predicate.test(this.accValue);
 	}
 
 }

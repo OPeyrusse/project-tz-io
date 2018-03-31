@@ -7,7 +7,7 @@ import com.kineolyan.tzio.v1.ref.OutputReference;
 /**
  * Operation assigning the value of an input into an output.
  */
-public class MovOperation implements Operation {
+class MovOperation implements Operation {
 
 	/** Input to read for a value */
 	private final InputReference from;
@@ -27,8 +27,7 @@ public class MovOperation implements Operation {
 	@Override
 	public Shift execute(final Node node) {
 		if (this.from.canRead(node) && this.to.canWrite(node)) {
-			final int value = this.from.readValue(node);
-			this.to.writeValue(node, value);
+			node.moveValue(this.from, this.to);
 			return Operation.Shift.NEXT;
 		} else {
 			return Operation.Shift.STAY;

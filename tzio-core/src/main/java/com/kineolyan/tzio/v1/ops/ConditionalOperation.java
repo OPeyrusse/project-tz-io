@@ -9,7 +9,7 @@ import java.util.function.ToIntFunction;
 /**
  * Conditional operation jumping to a given label when the consider node value is 0.
  */
-public class ConditionalOperation implements Operation, Operation.Shift {
+class ConditionalOperation implements Operation, Operation.Shift {
 
 	/** Target label operation */
 	private final String targetLabel;
@@ -67,7 +67,7 @@ public class ConditionalOperation implements Operation, Operation.Shift {
 
 	@Override
 	public Shift execute(final Node node) {
-		if (this.valuePredicate.test(node.getAccValue())) {
+		if (node.testValue(this.valuePredicate)) {
 			return this;
 		} else {
 			return Shift.NEXT;

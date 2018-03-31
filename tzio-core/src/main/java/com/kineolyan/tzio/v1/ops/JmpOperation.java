@@ -7,7 +7,7 @@ import java.util.function.ToIntFunction;
 /**
  * Operation shifting the stack to another operation.
  */
-public class JmpOperation implements Operation, Operation.Shift {
+class JmpOperation implements Operation, Operation.Shift {
 
 	/** Target label to go when executing this operation */
 	private final String targetLabel;

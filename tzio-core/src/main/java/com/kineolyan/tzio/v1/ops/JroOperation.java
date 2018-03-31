@@ -8,7 +8,11 @@ import java.util.function.ToIntFunction;
 /**
  * Conditional operation offsetting to the "next" operation according to the value of the node.
  */
-public class JroOperation implements Operation {
+class JroOperation implements Operation {
+
+	public static JroOperation INSTANCE = new JroOperation();
+
+	private JroOperation() {}
 
 	@Override
 	public Shift execute(final Node node) {

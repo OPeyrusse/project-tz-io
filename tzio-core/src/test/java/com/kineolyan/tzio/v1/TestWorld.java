@@ -1,6 +1,6 @@
 package com.kineolyan.tzio.v1;
 
-import com.kineolyan.tzio.v1.ops.MovOperation;
+import com.kineolyan.tzio.v1.ops.Operations;
 import com.kineolyan.tzio.v1.ref.SlotReference;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +23,8 @@ public class TestWorld {
 				new int[] {0},
 				new int[] {1},
 				List.of(
-					new MovOperation(SlotReference.of(1), SlotReference.of(1))
+					Operations.LABEL("start"),
+					Operations.MOV(SlotReference.of(1), SlotReference.of(1))
 				))
 			.addNode(
 				"b",
@@ -31,7 +32,7 @@ public class TestWorld {
 				new int[] {1},
 				new int[] {2},
 				List.of(
-					new MovOperation(SlotReference.of(1), SlotReference.of(1))
+					Operations.MOV(SlotReference.of(1), SlotReference.of(1))
 				));
 
 		final List<List<Integer>> outputs = new ArrayList<>();

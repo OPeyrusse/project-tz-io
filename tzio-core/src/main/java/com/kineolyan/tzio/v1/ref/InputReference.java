@@ -2,6 +2,8 @@ package com.kineolyan.tzio.v1.ref;
 
 import com.kineolyan.tzio.v1.Node;
 
+import java.util.function.IntPredicate;
+
 /**
  * Representation of a reference to an input.
  * <p>
@@ -26,5 +28,13 @@ public interface InputReference {
 	 * @return the value read from one node input
 	 */
 	int readValue(Node node);
+
+	default boolean execute(Node node, IntPredicate consumer) {
+		if (canRead(node)) {
+			return consumer.test(readValue(node));
+		} else {
+			return false;
+		}
+	}
 
 }

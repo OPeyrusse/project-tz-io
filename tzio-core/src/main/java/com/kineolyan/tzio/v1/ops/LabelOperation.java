@@ -5,7 +5,7 @@ import com.kineolyan.tzio.v1.Node;
 /**
  * Empty operation, serving as a label point for "goto" operators.
  */
-public class LabelOperation implements Operation {
+class LabelOperation implements Operation {
 
 	/** Label of the operation */
 	private final String label;

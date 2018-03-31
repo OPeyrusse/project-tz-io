@@ -22,9 +22,9 @@ public interface Operation {
 	/**
 	 * Executes the operation.
 	 * @param node node on which the operation is applied
-	 * @return the shift on the 
+	 * @return the shift on the
 	 */
-	Shift execute(final Node node);
+	Shift execute(Node node);
 
 	/**
 	 * Representation of a shift to the next operation.

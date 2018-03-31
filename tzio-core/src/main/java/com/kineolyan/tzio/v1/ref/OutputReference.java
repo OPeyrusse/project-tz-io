@@ -24,4 +24,13 @@ public interface OutputReference {
 	 */
 	void writeValue(Node node, int value);
 
+	default boolean execute(Node node, int value) {
+		if (canWrite(node)) {
+			writeValue(node, value);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 }
