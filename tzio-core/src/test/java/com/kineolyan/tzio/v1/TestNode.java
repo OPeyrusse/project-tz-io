@@ -1,5 +1,7 @@
 package com.kineolyan.tzio.v1;
 
+import com.kineolyan.tzio.v1.slot.InputSlot;
+import com.kineolyan.tzio.v1.slot.OutputSlot;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

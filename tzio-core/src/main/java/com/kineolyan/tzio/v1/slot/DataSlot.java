@@ -1,4 +1,6 @@
-package com.kineolyan.tzio.v1;
+package com.kineolyan.tzio.v1.slot;
+
+import com.kineolyan.tzio.v1.TransactionalElement;
 
 /**
  * Input/Output slot storing a single value.

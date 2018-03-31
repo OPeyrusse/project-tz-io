@@ -10,8 +10,10 @@ import java.util.function.ToIntFunction;
  */
 class JroOperation implements Operation {
 
+	/** Singleton instance of this operation */
 	public static JroOperation INSTANCE = new JroOperation();
 
+	/** Hidden constructor */
 	private JroOperation() {}
 
 	@Override

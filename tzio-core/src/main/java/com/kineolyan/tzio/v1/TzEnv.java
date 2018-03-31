@@ -1,6 +1,10 @@
 package com.kineolyan.tzio.v1;
 
 import com.kineolyan.tzio.v1.ops.Operation;
+import com.kineolyan.tzio.v1.slot.DataSlot;
+import com.kineolyan.tzio.v1.slot.InputQueueSlot;
+import com.kineolyan.tzio.v1.slot.InputSlot;
+import com.kineolyan.tzio.v1.slot.OutputSlot;
 
 import java.util.HashMap;
 import java.util.List;

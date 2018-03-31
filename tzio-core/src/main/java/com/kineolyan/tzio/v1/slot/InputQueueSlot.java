@@ -1,4 +1,6 @@
-package com.kineolyan.tzio.v1;
+package com.kineolyan.tzio.v1.slot;
+
+import com.kineolyan.tzio.v1.TransactionalElement;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;

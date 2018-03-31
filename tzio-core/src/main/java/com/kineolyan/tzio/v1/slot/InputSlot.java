@@ -1,4 +1,4 @@
-package com.kineolyan.tzio.v1;
+package com.kineolyan.tzio.v1.slot;
 
 /**
  * Representation of an input slot, that can be read if some data are available.

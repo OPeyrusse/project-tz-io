@@ -2,9 +2,10 @@ package com.kineolyan.tzio.v1;
 
 import com.kineolyan.tzio.v1.ref.InputReference;
 import com.kineolyan.tzio.v1.ref.OutputReference;
+import com.kineolyan.tzio.v1.slot.InputSlot;
+import com.kineolyan.tzio.v1.slot.OutputSlot;
 
 import java.util.function.IntPredicate;
-import java.util.function.Predicate;
 
 /**
  * Implementation of a node in the TZ-IO environment.
@@ -76,37 +77,62 @@ public class Node {
 
 	// Operations
 
+	/**
+	 * Moves the value of input into the output.
+	 * @param from input to read for a value
+	 * @param to output to write with a value
+	 */
 	public final void moveValue(final InputReference from, final OutputReference to) {
 		final int value = from.readValue(this);
 		to.writeValue(this, value);
 	}
 
-	public final void addValue(final InputReference source) {
-		changeValue(source.readValue(this));
+	/**
+	 * Adds the value of the input to the internal value.
+	 * @param input input to read for a value
+	 */
+	public final void addValue(final InputReference input) {
+		this.accValue += input.readValue(this);
 	}
 
-	public final void subValue(final InputReference source) {
-		changeValue(-source.readValue(this));
+	/**
+	 * Subtracts the value of the input of the internal value.
+	 * @param input input to read for a value
+	 */
+	public final void subValue(final InputReference input) {
+		this.accValue -= input.readValue(this);
 	}
 
+	/**
+	 * Negates the internal value.
+	 */
 	public final void negate() {
 		this.accValue = -this.accValue;
 	}
 
-	private final void changeValue(int value) {
-		this.accValue += value;
-	}
-
+	/**
+	 * Saves the internal value to the indexed memory slot.
+	 * @param memorySlot index of the memory slot where the value is saved.
+	 */
 	public final void bakValue(final int memorySlot) {
 		this.memorySlots[memorySlot] = this.accValue;
 	}
 
+	/**
+	 * Swaps the internal value with the indexed memory slot.
+	 * @param memorySlot index of the memory slot.
+	 */
 	public final void swapValue(final int memorySlot) {
 		final int swp = this.accValue;
 		this.accValue = this.memorySlots[memorySlot];
 		this.memorySlots[memorySlot] = swp;
 	}
 
+	/**
+	 * Tests the internal value against a predicate.
+	 * @param predicate predicate on the value.
+	 * @return result of the predicate
+	 */
 	public final boolean testValue(final IntPredicate predicate) {
 		return predicate.test(this.accValue);
 	}

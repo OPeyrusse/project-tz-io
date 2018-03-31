@@ -20,11 +20,11 @@ public class Operations {
 	}
 
 	public static Operation ADD(final InputReference input) {
-		return ArithmeticOperation.add(input);
+		return IncrementOperation.add(input);
 	}
 
 	public static Operation SUB(final InputReference input) {
-		return ArithmeticOperation.sub(input);
+		return IncrementOperation.sub(input);
 	}
 
 	public static Operation NEG() {

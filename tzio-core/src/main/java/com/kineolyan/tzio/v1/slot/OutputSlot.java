@@ -1,4 +1,4 @@
-package com.kineolyan.tzio.v1;
+package com.kineolyan.tzio.v1.slot;
 
 /**
  * Representation of a node output slot, where values can be written.
