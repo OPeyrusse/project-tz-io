@@ -18,18 +18,6 @@ fn collect_output_ports(outputs: &Vec<OutputMapping>) -> HashSet<u32> {
   outputs.iter().map(|ref output| output.from).collect::<HashSet<u32>>()
 }
 
-// fn test_pointer<F: FnOnce(u32) -> String>(
-//     result: &mut CheckResult,
-//     inputs: &HashSet<u32>,
-//     pointer: &ValuePointer,
-//     fmt: F) {
-//   if let &ValuePointer::PORT(ref port) = pointer {
-//     if !inputs.contains(port) {
-//       result.add_warning(fmt(port));
-//     }
-//   }
-// }
-
 fn test_input(
     result: &mut CheckResult,
     inputs: &HashSet<u32>,
