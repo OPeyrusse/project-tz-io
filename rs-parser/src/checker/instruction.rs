@@ -28,8 +28,8 @@ fn test_input(
     if !inputs.contains(port) {
       result.add_error(
         format!(
-          "Port {} from <op> is not defined in node {} inputs",
-          port, node));
+          "Port {} from {} is not defined in node {} inputs",
+          port, op, node));
     }
   }
 }
@@ -44,8 +44,8 @@ fn test_output(
     if !outputs.contains(port) {
       result.add_error(
         format!(
-          "Port {} from <op> is not defined in node {} outputs",
-          port, node));
+          "Port {} from {} is not defined in node {} outputs",
+          port, op, node));
     }
   }
 }

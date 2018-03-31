@@ -25,6 +25,7 @@ impl fmt::Display for Node {
 }
 
 impl Node {
+	#[cfg(test)]
 	pub fn new_node(name: &str) -> Self {
 		Node::Node(name.to_string())
 	}
@@ -56,6 +57,7 @@ impl Port {
 		Port { node: node, port: port }
 	}
 
+	#[cfg(test)]
 	pub fn named_port(node_name: &str, port: u32) -> Self {
 		Port { node: Node::new_node(node_name), port: port }
 	}
@@ -86,7 +88,7 @@ named!(pub port_ref<&RawData, Port>,
     id: node_ref >>
     tag!(":") >>
     port: be_uint >>
-    (Port {node: id, port: port})
+    (Port::new(id, port))
   )
 );
 

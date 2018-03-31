@@ -48,13 +48,13 @@ impl CheckResult {
 	fn print_report_into<F: FnMut(&str)>(&self, mut out: F) {
 		out(&" == TZIO compiler == ");
 		if self.has_warnings() {
-			out(&"Warnings in your project");
+			out(&format!("{} Warnings in your project", self.warning_count()));
 			for warning in &self.warnings {
 				out(&warning);
 			}
 		}
 		if self.has_errors() {
-			out(&"Errors in your project");
+			out(&format!("{} Errors in your project", self.error_count()));
 			for error in &self.errors {
 				out(&error);
 			}
@@ -66,7 +66,7 @@ pub fn check(parsing_tree: &ParsingResult) -> CheckResult {
 	let mut checks = CheckResult::new();
 	match parsing_tree {
 		&Result::Ok(ref res) => {
-			println!("{:?}", res);
+			// println!("{:?}", res);
 			if !mapping::check(res, &mut checks) {
 				checks.add_error(String::from(" -> Mapping errors ..."));
 			}
@@ -79,7 +79,6 @@ pub fn check(parsing_tree: &ParsingResult) -> CheckResult {
 			if !io::check(res, &mut checks) {
 				checks.add_error(String::from(" -> IOs errors ..."));
 			}
-			// TODO check that the same input/output port is not used by many nodes
 		},
 		&Result::Err(ref e) => checks.add_error(
 			format!("Parsing failure: {:?}", e))
@@ -189,9 +188,9 @@ mod tests {
 
 		assert_eq!(msgs, vec![
 			" == TZIO compiler == ",
-			"Warnings in your project",
+			"1 Warnings in your project",
 			"w",
-			"Errors in your project",
+			"1 Errors in your project",
 			"e"
 		]);
 	}

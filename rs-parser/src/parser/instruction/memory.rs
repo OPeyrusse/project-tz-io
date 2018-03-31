@@ -23,7 +23,6 @@ mod tests {
 
 	#[test]
 	fn test_parse_swp_operation_to_idx() {
-		// TODO code swap to other space
 		// let res = swp_operation(b"SWP 3");
 		// assert_full_result(res, Operation::SWP(MemoryPointer::BAK(3)));
 	}
