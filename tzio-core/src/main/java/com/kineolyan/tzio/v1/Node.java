@@ -75,6 +75,15 @@ public class Node {
 		return this.outputSlots[idx];
 	}
 
+	/**
+	 * Gets the value stored in the indexed memory slot.
+	 * @param slot slot index
+	 * @return the memory value
+	 */
+	public int getMemoryValue(final int slot) {
+		return this.memorySlots[slot - 1];
+	}
+
 	// Operations
 
 	/**
@@ -115,7 +124,7 @@ public class Node {
 	 * @param memorySlot index of the memory slot where the value is saved.
 	 */
 	public final void bakValue(final int memorySlot) {
-		this.memorySlots[memorySlot] = this.accValue;
+		this.memorySlots[memorySlot - 1] = this.accValue;
 	}
 
 	/**
@@ -123,9 +132,10 @@ public class Node {
 	 * @param memorySlot index of the memory slot.
 	 */
 	public final void swapValue(final int memorySlot) {
+		final int index = memorySlot - 1;
 		final int swp = this.accValue;
-		this.accValue = this.memorySlots[memorySlot];
-		this.memorySlots[memorySlot] = swp;
+		this.accValue = this.memorySlots[index];
+		this.memorySlots[index] = swp;
 	}
 
 	/**

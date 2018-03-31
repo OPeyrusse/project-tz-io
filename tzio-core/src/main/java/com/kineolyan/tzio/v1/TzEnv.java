@@ -155,6 +155,7 @@ public class TzEnv {
 	 * @param <T> Implementation type of the selected slots
 	 * @return the created selection
 	 */
+	@SuppressWarnings("unchecked")
 	private static <T> T[] getSlots(final Object[] slots, final int[] indexes, final IntFunction<T[]> generator) {
 		return IntStream.of(indexes)
 			.mapToObj(i -> (T) slots[i])

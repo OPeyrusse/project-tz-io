@@ -2,6 +2,7 @@ package com.kineolyan.tzio.v1.slot;
 
 import com.kineolyan.tzio.v1.TransactionalElement;
 
+import java.util.OptionalInt;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -32,7 +33,12 @@ public class InputQueueSlot implements InputSlot, TransactionalElement {
 
 	@Override
 	public int read() {
-		return this.values.poll();
+		final Integer value = this.values.poll();
+		if (value != null) {
+			return value;
+		} else {
+			throw new IllegalStateException("Cannot call #read without values");
+		}
 	}
 
 }
