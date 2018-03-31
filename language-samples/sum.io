@@ -32,7 +32,7 @@ Node #3
 ---------
 MOV <1, ACC
 ADD <2 // Sum the values
-MOVE ACC, >1
+MOV ACC, >1
 ------------
 1 -> OUT:1
 =========

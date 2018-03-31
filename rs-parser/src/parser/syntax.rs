@@ -2,18 +2,18 @@ use nom::{space};
 
 use parser::common::{RawData, be_uint, ospace, eol, opt_eol};
 use parser::address::{Node, Port, node_header, port_ref};
-use parser::instruction::{parse_instruction, Operation, ValuePointer, MemoryPointer};
+use parser::instruction::{parse_instruction, Operation};
 use parser::instruction::condition::label_operation;
 
 #[derive(Debug, PartialEq)]
 pub struct InputMapping {
-	from: Port,
-	to: u32
+	pub from: Port,
+	pub to: u32
 }
 #[derive(Debug, PartialEq)]
 pub struct OutputMapping {
-	from: u32,
-	to: Port
+	pub from: u32,
+	pub to: Port
 }
 
 // Syntax lines
@@ -88,12 +88,13 @@ named!(instruction_list<&RawData, Vec<Operation> >,
 	})
 );
 
-pub type NodeBlock<'a> = (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>);
+pub type NodeBlock = (Node, Vec<InputMapping>, Vec<OutputMapping>, Vec<Operation>);
 named!(node_block<&RawData, NodeBlock>,
 	do_parse!(
 		ospace >>
 		node: node_header >> eol >>
 		node_line >> eol >>
+		opt_eol >>
 		inputs: opt!(
 			do_parse!(
 				ospace >> is: inputs >> eol >>
@@ -126,7 +127,9 @@ named!(pub node_list<&RawData, Vec<NodeBlock> >,
 #[cfg(test)]
 mod tests {
 	use super::*;
+
 	use parser::common::tests::{assert_result, assert_full_result};
+	use parser::instruction::{ValuePointer, MemoryPointer};
 
 	#[test]
 	fn test_parse_node_line() {
@@ -290,6 +293,29 @@ mod tests {
 	fn test_parse_with_consecutive_labels() {
 		let res = instruction_line(b"L1: L2:\n");
 		assert!(res.is_err(), true);
+	}
+
+	#[test]
+	fn test_parse_instruction_with_comment() {
+		let res = instruction_line(b"ADD <2 // Sum the values\n");
+		assert_full_result(
+			res,
+			vec![
+				Operation::ADD(ValuePointer::PORT(2))
+			]
+		);
+	}
+
+	#[test]
+	fn test_parse_label_and_instruction_with_comment() {
+		let res = instruction_line(b"LBL: SUB <3 // Sum the values\n");
+		assert_full_result(
+			res,
+			vec![
+				Operation::LABEL(String::from("LBL")),
+				Operation::SUB(ValuePointer::PORT(3))
+			]
+		);
 	}
 
 	#[test]
@@ -487,6 +513,51 @@ SWP
 	}
 
 	#[test]
+	fn test_parse_commented_node() {
+		let input = b"Node #1
+=======
+// Possible to repeat the same source (for readability)
+#1:1 -> 1, #2:1 -> 2
+---------
+MOV <1, ACC
+ADD <2 // Sum the values
+MOV ACC, >1
+------------
+1 -> OUT:1
+=========
+";
+
+		let res = node_block(input);
+		assert_full_result(
+			res,
+			(
+				Node::new_node("1"),
+				vec![
+					InputMapping {
+						from: Port::named_port(&"1", 1),
+						to: 1
+					},
+					InputMapping {
+						from: Port::named_port(&"2", 1),
+						to: 2
+					}
+				],
+				vec![
+					OutputMapping {
+						from: 1,
+						to: Port::new(Node::Out, 1)
+					}
+				],
+				vec![
+					Operation::MOV(ValuePointer::PORT(1), ValuePointer::ACC),
+					Operation::ADD(ValuePointer::PORT(2)),
+					Operation::MOV(ValuePointer::ACC, ValuePointer::PORT(1)),
+				]
+			)
+		);
+	}
+
+	#[test]
 	fn test_parse_node_list() {
 		let input = b"
  Node #1
@@ -504,7 +575,16 @@ MOV <1,  >1
 ----------
 MOV <2, >2
 ----------
-2 -> OUT:1
+2 -> #3:3
+==========
+
+Node #3
+==========
+#2:2 -> 3
+----------
+MOV <3, >3
+----------
+3 -> OUT:1
 ==========
 
 ";
@@ -542,11 +622,29 @@ MOV <2, >2
 					vec![
 						OutputMapping {
 							from: 2,
-							to: Port::new(Node::Out, 1)
+							to: Port::named_port(&"3", 3)
 						}
 					],
 					vec![
 						Operation::MOV(ValuePointer::PORT(2), ValuePointer::PORT(2)),
+					]
+				),
+				(
+					Node::new_node("3"),
+					vec![
+						InputMapping {
+							from: Port::named_port(&"2", 2),
+							to: 3
+						}
+					],
+					vec![
+						OutputMapping {
+							from: 3,
+							to: Port::new(Node::Out, 1)
+						}
+					],
+					vec![
+						Operation::MOV(ValuePointer::PORT(3), ValuePointer::PORT(3)),
 					]
 				)
 			]

@@ -4,11 +4,12 @@ extern crate nom;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::result::Result;
 
 mod parser;
+mod postprocessor;
+mod checker;
 
-fn parse_file<'a>(filename: &str) -> parser::ParsingResult<'a> {
+fn parse_file(filename: &str) -> parser::ParsingResult {
 	println!("Compiling {}", filename);
 	let mut f = File::open(filename).expect("file not found");
 
@@ -19,30 +20,37 @@ fn parse_file<'a>(filename: &str) -> parser::ParsingResult<'a> {
 	parser::parse(contents.as_bytes())
 }
 
+fn process_file(filename: &str) -> parser::ParsingResult {
+	let result = parse_file(filename)
+		.map(postprocessor::process);
+	let check_result = checker::check(&result);
+	check_result.print_report();
+	if check_result.has_errors() {
+		panic!("Exit after errors");
+	}
+	result
+}
+
 fn main() {
 	let args: Vec<String> = env::args().collect();
 
 	let filename = &args[1];
-	let result = parse_file(filename);
-	match result {
-		Result::Ok(res) => println!("{:?}", res),
-		_ => println!("Failure")
-	}
+	let _res = process_file(filename);
 }
 
 #[cfg(test)]
 mod tests {
-	use super::parse_file;
+	use super::process_file;
 
 	#[test]
 	fn test_sample_sum() {
-		let res = parse_file("../language-samples/sum.io");
+		let res = process_file("../language-samples/sum.io");
 		assert_eq!(res.is_ok(), true);
 	}
 
 	#[test]
 	fn test_sample_increment() {
-		let res = parse_file("../language-samples/increment.io");
+		let res = process_file("../language-samples/increment.io");
 		assert_eq!(res.is_ok(), true);
 	}
 
