@@ -16,22 +16,24 @@ public class DataSlot implements InputSlot, OutputSlot, TransactionalElement {
 
 	@Override
 	public boolean canRead() {
-		return this.hasValue;
+		return this.hasValue && this.hasValueAfterStep;
 	}
 
 	@Override
 	public int read() {
+		assert canRead(): "Cannot read from this slot";
 		this.hasValueAfterStep = false;
 		return this.value;
 	}
 
 	@Override
 	public boolean canWrite() {
-		return !this.hasValue;
+		return !this.hasValue && !this.hasValueAfterStep;
 	}
 
 	@Override
 	public void write(final int value) {
+		assert canWrite(): "Cannot write into this slot";
 		this.value = value;
 		this.hasValueAfterStep = true;
 	}
