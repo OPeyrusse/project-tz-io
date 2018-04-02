@@ -8,6 +8,7 @@ use std::io::prelude::*;
 mod parser;
 mod postprocessor;
 mod checker;
+mod generator;
 
 use parser::{ParsingResult, ParsingTree, parse};
 
@@ -43,8 +44,8 @@ fn process_input(filename: &str) -> Result<ParsingTree, String> {
 		.and_then(check_file)
 }
 
-fn create_output(result: ParsingTree, target_dir: &str) -> Result<(), String> {
-	Ok(())
+fn create_output(result: ParsingTree, filename: &str, target_dir: &str) -> Result<(), String> {
+	generator::generate(result, filename, target_dir)
 }
 
 fn main() {
@@ -53,7 +54,7 @@ fn main() {
 	let filename = &args[1];
 	let target_dir = &args[2];
 	let result = process_input(filename)
-		.and_then(|result| create_output(result, target_dir));
+		.and_then(|result| create_output(result, filename, target_dir));
 	if result.is_ok() {
 		println!("File {} compiled with success to {}", filename, target_dir);
 	} else {
