@@ -1,6 +1,6 @@
+mod java;
+
 use parser::ParsingTree;
-use parser::address::Node;
-use parser::syntax::NodeBlock;
 use std::path::{Path, PathBuf};
 use std::fs;
 
@@ -24,22 +24,18 @@ fn prepare_output<'a>(filename: &'a str, target_dir: &'a str) -> Result<PathBuf,
   result.map(|_| output_dir_buffer)
 }
 
-fn create_node_file(node_block: &NodeBlock, output_file: &Path) -> Result<(), String> {
-  Ok(())
-}
-
-fn create_main_file(tree: &ParsingTree, output_file: &Path) -> Result<(), String> {
-  Ok(())
-}
-
 fn generate_program(tree: &ParsingTree, output_dir: PathBuf) -> Result<(), String> {
   let mut main_file = output_dir.clone();
-  main_file.push("Main.class");
-  let mut result = create_main_file(&tree, main_file.as_path());
+  main_file.set_file_name("Main");
+  main_file.set_extension("class");
+  let mut result = java::create_main_file(&tree, main_file.as_path());
+
   for node in tree {
     let mut file = output_dir.clone();
-    file.push(node.0.get_id());
-    result = result.and_then(|_| create_node_file(node, file.as_path()));
+    file.set_file_name(node.0.get_id());
+    file.set_extension("class");
+
+    result = result.and_then(|_| java::create_node_file(node, file.as_path()));
   }
   result
 }
