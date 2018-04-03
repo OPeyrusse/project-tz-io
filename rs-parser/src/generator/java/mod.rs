@@ -1,5 +1,6 @@
 mod class;
 mod writer;
+mod constants;
 
 use std::path::Path;
 
