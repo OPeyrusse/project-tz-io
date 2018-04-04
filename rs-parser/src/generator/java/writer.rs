@@ -43,11 +43,12 @@ fn write_header(file: &mut File) -> io::Result<()> {
   file.write_all(&MAGIC)?;
   // Write class version
   // write_or_panic(file, &VERSIONS);
-  file.write_all(&VERSIONS)
+  file.write_all(&VERSIONS)?;
+  file.flush()
 }
 
 fn write_constant_pool(file: &mut File, class: &JavaClass) -> io::Result<()> {
-  Ok(())
+  file.flush()
 }
 
 fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
@@ -60,11 +61,11 @@ fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
   for interface_id in &class.interfaces {
     write_u16(file, interface_id)?;
   }
-  Ok(())
+  file.flush()
 }
 
 fn write_class_definition(file: &mut File, class: &JavaClass) -> io::Result<()> {
-  Ok(())
+  file.flush()
 }
 
 pub fn write(class: &JavaClass, output_file: &Path) -> io::Result<()> {

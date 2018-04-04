@@ -1,41 +1,70 @@
-use std::collections::HashMap;
-
 type PoolIdx = u16;
 
 #[derive(Debug)]
-pub struct JavaClass<'a> {
-  next_idx: PoolIdx,
-  class_pool: HashMap<&'a str, PoolIdx>,
+pub enum PoolElement {
+  Utf8Value(String),
+  ClassInfo(usize)
+}
+
+#[derive(Debug)]
+pub struct JavaClass {
+  class_pool: Vec<PoolElement>,
   // TODO collect this information
   pub class_id: PoolIdx,
   pub super_class_id: PoolIdx,
   pub interfaces: Vec<PoolIdx>
 }
 
-impl<'a> JavaClass<'a> {
-  pub fn new() -> JavaClass<'a> {
-    JavaClass { 
-      next_idx: 0, 
-      class_pool: HashMap::new(),
+impl JavaClass {
+  pub fn new() -> JavaClass {
+    JavaClass {
+      class_pool: Vec::new(),
       class_id: 0,
       super_class_id: 0,
-      interfaces: vec![]
+      interfaces: Vec::new()
     }
   }
 
-  pub fn register_attribute(&mut self, attribute_name: &'a str) -> Result<PoolIdx, String> {
-    self.register(attribute_name)
-      .map_err(|idx| format!("Attribute already mapped to {}", idx))
+  pub fn set_class(&mut self, classname: &str) {
+    let class_idx = self.map_class(classname);
+    self.class_id = (class_idx + 1) as u16;
   }
 
-  fn register(&mut self, element_name: &'a str) -> Result<PoolIdx, PoolIdx> {
-    let idx = self.next_idx;
-    match self.class_pool.insert(element_name, idx) {
+  pub fn set_super_class(&mut self, classname: &str) {
+    let class_idx = self.map_class(classname);
+    self.class_id = (class_idx + 1) as u16;
+  }
+
+  fn map_class(&mut self, classname: &str) -> usize {
+    let value_idx = self.map_utf8_value(classname);
+    let result: Option<usize> = self.class_pool.iter().enumerate()
+      .find(|&e| match e.1 {
+        &PoolElement::ClassInfo(ref value) => *value == value_idx,
+        _ => false
+      })
+      .map(|e| e.0);
+    match result {
+      Some(existing) => existing,
       None => {
-        self.next_idx += 1;
-        Ok(idx)
-      },
-      Some(i) => Err(i)
+        self.class_pool.push(PoolElement::ClassInfo(value_idx));
+        self.class_pool.len() - 1
+      }
+    }
+  }
+
+  fn map_utf8_value(&mut self, classname: &str) -> usize {
+    let result: Option<usize> = self.class_pool.iter().enumerate()
+      .find(|&e| match e.1 {
+        &PoolElement::Utf8Value(ref value) => value.as_str() == classname,
+        _ => false
+      })
+      .map(|e| e.0);
+    match result {
+      Some(existing) => existing,
+      None => {
+        self.class_pool.push(PoolElement::Utf8Value(String::from(classname)));
+        self.class_pool.len() - 1
+      }
     }
   }
 }

@@ -28,16 +28,17 @@ fn generate_program(tree: &ParsingTree, output_dir: PathBuf) -> Result<(), Strin
   let mut main_file = output_dir.clone();
   main_file.set_file_name("Main");
   main_file.set_extension("class");
-  let mut result = java::create_main_file(&tree, main_file.as_path());
+  java::create_main_file(&tree, main_file.as_path())?;
 
   for node in tree {
     let mut file = output_dir.clone();
     file.set_file_name(node.0.get_id());
     file.set_extension("class");
 
-    result = result.and_then(|_| java::create_node_file(node, file.as_path()));
+    java::create_node_file(node, file.as_path())?;
   }
-  result
+  
+  Ok(())
 }
 
 pub fn generate(result: ParsingTree, filename: &str, target_dir: &str) -> Result<(), String> {
