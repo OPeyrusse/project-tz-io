@@ -1,4 +1,6 @@
-type PoolIdx = u16;
+use generator::java::constructs::{Signature, Method};
+
+pub type PoolIdx = u16;
 
 #[derive(Debug)]
 pub enum PoolElement {
@@ -12,7 +14,8 @@ pub struct JavaClass {
   // TODO collect this information
   pub class_id: PoolIdx,
   pub super_class_id: PoolIdx,
-  pub interfaces: Vec<PoolIdx>
+  pub interfaces: Vec<PoolIdx>,
+  pub methods: Vec<Method>
 }
 
 impl JavaClass {
@@ -21,7 +24,8 @@ impl JavaClass {
       class_pool: Vec::new(),
       class_id: 0,
       super_class_id: 0,
-      interfaces: Vec::new()
+      interfaces: Vec::new(),
+      methods: Vec::new()
     }
   }
 
@@ -35,7 +39,26 @@ impl JavaClass {
     self.class_id = (class_idx + 1) as u16;
   }
 
-  fn map_class(&mut self, classname: &str) -> usize {
+  pub fn create_method(
+      &mut self, 
+      access: u16,
+      method_name: &str,
+      signature: Signature,
+      attributes: Vec<usize>) -> PoolIdx {
+    let name_idx = self.map_utf8_value(method_name);
+    let descriptor = create_descriptor(&signature);
+    let descriptor_idx = self.map_utf8_value(&descriptor);
+
+    self.methods.push(Method {
+      access: access,
+      name_index: name_idx as PoolIdx,
+      descriptor_index: descriptor_idx as PoolIdx
+    });
+
+    name_idx as PoolIdx
+  }
+
+  pub fn map_class(&mut self, classname: &str) -> usize {
     let value_idx = self.map_utf8_value(classname);
     let result: Option<usize> = self.class_pool.iter().enumerate()
       .find(|&e| match e.1 {
@@ -67,4 +90,8 @@ impl JavaClass {
       }
     }
   }
+}
+
+fn create_descriptor(signature: &Signature) -> String {
+  String::from("")
 }
