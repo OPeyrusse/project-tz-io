@@ -54,7 +54,22 @@ fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<cla
     return_type: constants::Type::Void,
     parameter_types: vec![]
   };
-  let mut attributes = vec![];
+
+  let with_slots_idx = 0;
+  let mut operations = vec![
+    // Configure the slots
+    constructs::Operation::aload_0,
+    constructs::Operation::iconst_1,
+    // Push the array of inputs
+    // Push the array of outputs
+    constructs::Operation::invokevirtual(with_slots_idx)
+  ];
+  for idx in definition_methods {
+    // Call each definition private method
+    operations.push(constructs::Operation::aload_0);
+    operations.push(constructs::Operation::invokespecial(*idx));
+  }
+
   let access: u16 = 
     (constants::MethodAccess::FINAL as u16) |
     (constants::MethodAccess::PUBLIC as u16);
@@ -62,6 +77,8 @@ fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<cla
   let idx = class.create_method(
     access,
     &"<init>",
-    signature, 
-    attributes);
+    signature,
+    vec![
+      constructs::Attribute::Code(3, operations)
+    ]);
 }

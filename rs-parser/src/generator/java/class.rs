@@ -1,4 +1,7 @@
-use generator::java::constructs::{Signature, Method};
+use generator::java::constructs::{
+  Attribute,
+  Signature, 
+  Method};
 
 pub type PoolIdx = u16;
 
@@ -44,7 +47,7 @@ impl JavaClass {
       access: u16,
       method_name: &str,
       signature: Signature,
-      attributes: Vec<usize>) -> PoolIdx {
+      attributes: Vec<Attribute>) -> PoolIdx {
     let name_idx = self.map_utf8_value(method_name);
     let descriptor = create_descriptor(&signature);
     let descriptor_idx = self.map_utf8_value(&descriptor);
@@ -52,7 +55,8 @@ impl JavaClass {
     self.methods.push(Method {
       access: access,
       name_index: name_idx as PoolIdx,
-      descriptor_index: descriptor_idx as PoolIdx
+      descriptor_index: descriptor_idx as PoolIdx,
+      attributes: attributes
     });
 
     name_idx as PoolIdx
