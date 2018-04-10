@@ -15,6 +15,23 @@ use parser::syntax::{NodeBlock};
 //     .map_err(|e| format!("Failed to write into file. Caused by {}", e))
 // }
 
+fn create_int_array(values: &Vec<u32>, var_idx: u8) -> constructs::Attribute {
+  let mut operations = vec![
+    // Push the array length to the stack
+    constructs::Operation::newarray(constants::ArrayType::INT),
+    constructs::Operation::astore(var_idx)
+  ];
+  for (i, value) in values.iter().enumerate() {
+    // Add value to array
+    operations.push(constructs::Operation::aload(var_idx));
+    // TODO Push the index into the stack
+    // TODO Push the value into the stack
+    operations.push(constructs::Operation::aastore)
+  }
+
+  constructs::Attribute::Code(3, operations)
+}
+
 pub fn create_main_file(tree: &ParsingTree, output_file: &Path) -> Result<(), String> {
   let mut class = class::JavaClass::new();
 
@@ -46,7 +63,37 @@ fn create_node_definition_method(
     i: usize,
     node: &NodeBlock,
     class: &mut class::JavaClass) -> class::PoolIdx {
-  0
+  let signature = constructs::Signature {
+    return_type: constants::Type::Void,
+    parameter_types: vec![]
+  };
+  
+  let add_node_idx = 0; // TODO reference the addNode method
+  let mut create_input_array = create_int_array(&vec![0, 1], 1);
+  let mut create_output_array = create_int_array(&vec![1, 2], 2);
+  let call_to_add_node = vec![
+    constructs::Operation::aload_0,
+    // Push the name of the node
+    constructs::Operation::iconst_1,
+    constructs::Operation::aload(1),
+    constructs::Operation::aload(2),
+    // Push the list of operations
+    constructs::Operation::invokevirtual(add_node_idx)
+  ];
+
+  let access: u16 = 
+    (constants::MethodAccess::FINAL as u16) |
+    (constants::MethodAccess::PRIVATE as u16);
+
+  class.create_method(
+    access,
+    &"<init>",
+    signature,
+    vec![
+      create_input_array,
+      create_output_array,
+      constructs::Attribute::Code(6, call_to_add_node)
+    ])
 }
 
 fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<class::PoolIdx>) {

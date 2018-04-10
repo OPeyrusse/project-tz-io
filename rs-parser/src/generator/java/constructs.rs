@@ -1,4 +1,4 @@
-use generator::java::constants::Type;
+use generator::java::constants::{Type, ArrayType};
 
 #[derive(Debug)]
 pub struct Signature {
@@ -9,16 +9,36 @@ pub struct Signature {
 #[derive(Debug)]
 pub enum Operation {
   aaload,
-  aload,
+  /// Push the value into an array at a given index
+  aastore,
+  /// Lods a reference of a local variable into the stack
+  /// Structure
+  /// ```
+  ///  1. Index of the local variable
+  /// ```
+  aload(u8),
   aload_0,
+  /// Stores a reference into a local variable
+  /// Structure
+  /// ```
+  ///  1. Index of the local variable
+  /// ```
+  astore(u8),
   iconst_1,
   iload_1,
   invokespecial(u16),
-  invokevirtual(u16)
+  invokevirtual(u16),
+  newarray(ArrayType)
 }
 
 #[derive(Debug)]
 pub enum Attribute {
+  /// Code attribute
+  /// Structure
+  /// ```
+  ///  1. max stack size
+  ///  2. Operations
+  /// ```
   Code(u16, Vec<Operation>)
 }
 
