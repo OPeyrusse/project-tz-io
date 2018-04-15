@@ -75,7 +75,7 @@ fn create_node_definition_method(
   let mut create_input_array = create_int_array(&vec![0, 1], 1);
   let mut create_output_array = create_int_array(&vec![1, 2], 2);
   let call_to_add_node = vec![
-    constructs::Operation::aload_0,
+    constructs::Operation::aload(0),
     // Push the name of the node
     constructs::Operation::iconst_1,
     constructs::Operation::aload(1),
@@ -111,7 +111,7 @@ fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<cla
   let with_slots_idx = 0;
   let mut operations = vec![
     // Configure the slots
-    constructs::Operation::aload_0,
+    constructs::Operation::aload(0),
     constructs::Operation::iconst_1,
     // Push the array of inputs
     // Push the array of outputs
@@ -119,7 +119,7 @@ fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<cla
   ];
   for idx in definition_methods {
     // Call each definition private method
-    operations.push(constructs::Operation::aload_0);
+    operations.push(constructs::Operation::aload(0));
     operations.push(constructs::Operation::invokespecial(*idx));
   }
 
@@ -158,7 +158,7 @@ fn create_main(class: &mut class::JavaClass) -> class::PoolIdx {
     // Create a new instance of this class
     constructs::Operation::new(this_class_idx),
     // Call 'runFromSystem' with main parameter array
-    constructs::Operation::aload_0,
+    constructs::Operation::aload(0),
     constructs::Operation::invokevirtual(run_from_idx)
   ];
 

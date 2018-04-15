@@ -18,8 +18,6 @@ pub enum Operation {
   ///  1. Index of the local variable
   /// ```
   aload(u8),
-  aload_0,
-  aload_1,
   /// Stores a reference into a local variable
   /// Structure
   /// ```

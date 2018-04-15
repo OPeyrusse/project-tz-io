@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::cmp::Eq;
 use generator::java::constructs::{
   Attribute,
   Signature, 
@@ -5,29 +7,57 @@ use generator::java::constructs::{
 
 pub type PoolIdx = u16;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Hash)]
 pub enum PoolElement {
   Utf8Value(String),
-  ClassInfo(usize),
+  ClassInfo(PoolIdx),
   /// Info refering to a method
   /// Structure
   /// ```
   ///  1. Index to class info
   ///  2. INdex to a name & type info
   /// ```
-  MethodRef(usize, usize),
+  MethodRef(PoolIdx, PoolIdx),
   /// Info about a function
   /// Structure
   /// ```
   ///  1. Index to the method name info
   ///  2. INdex to the descriptor info
   /// ```
-  NameAndType(usize, usize)
+  NameAndType(PoolIdx, PoolIdx)
+}
+
+impl Eq for PoolElement {}
+
+#[derive(Debug)]
+struct ClassPool {
+  pool: HashMap<PoolElement, PoolIdx>,
+  next_idx: PoolIdx
+}
+
+impl ClassPool {
+  fn new() -> ClassPool {
+    ClassPool { 
+      pool: HashMap::new(),
+      next_idx: 1
+    }
+  }
+
+  pub fn map(&mut self, element: PoolElement) -> PoolIdx {
+    let idx = self.next_idx;
+    match self.pool.insert(element, idx) {
+      None => {
+        self.next_idx += 1;
+        idx
+      },
+      Some(ref i) => *i
+    }
+  }
 }
 
 #[derive(Debug)]
 pub struct JavaClass {
-  class_pool: Vec<PoolElement>,
+  class_pool: ClassPool,
   // TODO collect this information
   pub class_id: PoolIdx,
   pub super_class_id: PoolIdx,
@@ -38,7 +68,7 @@ pub struct JavaClass {
 impl JavaClass {
   pub fn new() -> JavaClass {
     JavaClass {
-      class_pool: Vec::new(),
+      class_pool: ClassPool::new(),
       class_id: 0,
       super_class_id: 0,
       interfaces: Vec::new(),
@@ -103,45 +133,41 @@ impl JavaClass {
   //   self.map_method(&class_name, method_name, signature)
   // }
 
+  fn map_name_and_type(
+      &mut self, 
+      method_name: &str,
+      signature: &Signature) -> PoolIdx {
+    let method_idx = self.map_utf8_value(method_name);
+    let descr_idx = self.map_descriptor(signature);
+    let name_and_type = PoolElement::NameAndType(method_idx, descr_idx);
+    self.class_pool.map(name_and_type)
+  }
+
   pub fn map_method(
       &mut self, 
       class_name: &str, 
       method_name: &str,
       signature: &Signature) -> PoolIdx {
-    0
+    let class_idx = self.map_class(class_name);
+    let nnt_idx = self.map_name_and_type(method_name, signature);
+    let method_ref = PoolElement::MethodRef(class_idx, nnt_idx);
+    self.class_pool.map(method_ref)
   }
 
-  pub fn map_class(&mut self, classname: &str) -> usize {
+  pub fn map_class(&mut self, classname: &str) -> PoolIdx {
     let value_idx = self.map_utf8_value(classname);
-    let result: Option<usize> = self.class_pool.iter().enumerate()
-      .find(|&e| match e.1 {
-        &PoolElement::ClassInfo(ref value) => *value == value_idx,
-        _ => false
-      })
-      .map(|e| e.0);
-    match result {
-      Some(existing) => existing,
-      None => {
-        self.class_pool.push(PoolElement::ClassInfo(value_idx));
-        self.class_pool.len() - 1
-      }
-    }
+    let info = PoolElement::ClassInfo(value_idx);
+    self.class_pool.map(info)
   }
 
-  fn map_utf8_value(&mut self, classname: &str) -> usize {
-    let result: Option<usize> = self.class_pool.iter().enumerate()
-      .find(|&e| match e.1 {
-        &PoolElement::Utf8Value(ref value) => value.as_str() == classname,
-        _ => false
-      })
-      .map(|e| e.0);
-    match result {
-      Some(existing) => existing,
-      None => {
-        self.class_pool.push(PoolElement::Utf8Value(String::from(classname)));
-        self.class_pool.len() - 1
-      }
-    }
+  fn map_descriptor(&mut self, signature: &Signature) -> PoolIdx {
+    let descriptor = create_descriptor(signature);
+    self.map_utf8_value(&descriptor)
+  }
+
+  fn map_utf8_value(&mut self, value: &str) -> PoolIdx {
+    let info = PoolElement::Utf8Value(String::from(value));
+    self.class_pool.map(info)
   }
 }
 
