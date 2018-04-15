@@ -8,6 +8,8 @@ use std::path::Path;
 use parser::ParsingTree;
 use parser::syntax::{NodeBlock};
 
+const TZ_ENV_CLASS_NAME: &str = "com/kineolyan/tzio/v1/TzEnv";
+
 // pub fn create_node_file(node_block: &NodeBlock, output_file: &Path) -> Result<(), String> {
 //   let mut class = class::JavaClass::new();
 
@@ -40,7 +42,7 @@ pub fn create_main_file(tree: &ParsingTree, output_file: &Path) -> Result<(), St
   classname.push_str("/Main");
   class.set_class(&classname);
 
-  class.set_super_class(&"com/kineolyan/tzio/v1/TzEnv");
+  class.set_super_class(&TZ_ENV_CLASS_NAME);
 
   let mut definition_methods: Vec<class::PoolIdx> = vec![];
   for (i, node) in tree.iter().enumerate() {
@@ -54,6 +56,7 @@ pub fn create_main_file(tree: &ParsingTree, output_file: &Path) -> Result<(), St
   }
 
   create_constructor(&mut class, &definition_methods);
+  create_main(&mut class);
 
   writer::write(&class, output_file)
     .map_err(|e| format!("Failed to write into file. Caused by {}", e))
@@ -85,9 +88,12 @@ fn create_node_definition_method(
     (constants::MethodAccess::FINAL as u16) |
     (constants::MethodAccess::PRIVATE as u16);
 
+  let mut method_name = String::from("createNode");
+  method_name.push_str(&(i as u32).to_string());
+
   class.create_method(
     access,
-    &"<init>",
+    &method_name,
     signature,
     vec![
       create_input_array,
@@ -96,7 +102,7 @@ fn create_node_definition_method(
     ])
 }
 
-fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<class::PoolIdx>) {
+fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<class::PoolIdx>) -> class::PoolIdx {
   let signature = constructs::Signature {
     return_type: constants::Type::Void,
     parameter_types: vec![]
@@ -121,11 +127,50 @@ fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<cla
     (constants::MethodAccess::FINAL as u16) |
     (constants::MethodAccess::PUBLIC as u16);
 
-  let idx = class.create_method(
+  class.create_method(
     access,
     &"<init>",
     signature,
     vec![
       constructs::Attribute::Code(3, operations)
-    ]);
+    ])
 }
+
+fn create_main(class: &mut class::JavaClass) -> class::PoolIdx {
+  let signature = constructs::Signature {
+    return_type: constants::Type::Void,
+    parameter_types: vec![
+      constants::Type::ObjectArray(1, String::from("java/lang/String"))
+    ]
+  };
+
+  let this_class_idx = class.class_id;
+  let run_from_idx = class.map_method(
+    &TZ_ENV_CLASS_NAME, 
+    &"runFromSystem",
+    &constructs::Signature {
+      return_type: constants::Type::Void,
+      parameter_types: vec![
+        constants::Type::ObjectArray(1, String::from("java/lang/String"))
+      ]
+    });
+  let operations = vec![
+    // Create a new instance of this class
+    constructs::Operation::new(this_class_idx),
+    // Call 'runFromSystem' with main parameter array
+    constructs::Operation::aload_0,
+    constructs::Operation::invokevirtual(run_from_idx)
+  ];
+
+  let access: u16 = 
+    (constants::MethodAccess::STATIC as u16) |
+    (constants::MethodAccess::PUBLIC as u16);
+
+  class.create_method(
+    access,
+    &"main",
+    signature,
+    vec![
+      constructs::Attribute::Code(3, operations)
+    ])
+} 

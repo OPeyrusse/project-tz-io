@@ -1,6 +1,7 @@
 // from https://docs.oracle.com/javase/specs/jvms/se10/html/jvms-4.html#jvms-4.6
 
 /// Enum class referencing the various possible flag accesses for a class
+#[derive(Debug, PartialEq)]
 pub enum ClassAccess {
   PUBLIC = 0x0001, // Declared public; may be accessed from outside its package.
   FINAL = 0x0010, // Declared final; no subclasses allowed.
@@ -13,6 +14,7 @@ pub enum ClassAccess {
   MODULE = 0x8000	// Is a module, not a class or interface.
 }
 
+#[derive(Debug, PartialEq)]
 pub enum MethodAccess {
   PUBLIC = 0x0001, // Declared public; may be accessed from outside its package.
   PRIVATE = 0x0002, // Declared private; accessible only within the defining class.
@@ -28,13 +30,29 @@ pub enum MethodAccess {
   SYNTHETIC = 0x1000 // Declared synthetic; not present in the source code.
 }
 
-#[derive(Debug)]
+/// Enum representing a type for a variable in Java
+#[derive(Debug, PartialEq, Clone)]
 pub enum Type {
-  Void
+  /// Void type
+  Void,
+  /// Array of primitives
+  /// Signature:
+  /// ```
+  ///  1. Number of dimensions
+  ///  2. Primitive type
+  /// ```
+  PrimitiveArray(u8, ArrayType),
+  /// Array of objects
+  /// Signature:
+  /// ```
+  ///  1. Number of dimensions
+  ///  2. Class name of the array
+  /// ```
+  ObjectArray(u8, String)
 }
 
 /// Primitive types for an array
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ArrayType {
   BOOLEAN = 4,
   CHAR = 5,

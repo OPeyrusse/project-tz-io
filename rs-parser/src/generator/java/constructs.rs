@@ -1,6 +1,6 @@
 use generator::java::constants::{Type, ArrayType};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Signature {
   pub return_type: Type,
   pub parameter_types: Vec<Type>
@@ -8,6 +8,7 @@ pub struct Signature {
 
 #[derive(Debug)]
 pub enum Operation {
+  /// Load a value from an array
   aaload,
   /// Push the value into an array at a given index
   aastore,
@@ -18,6 +19,7 @@ pub enum Operation {
   /// ```
   aload(u8),
   aload_0,
+  aload_1,
   /// Stores a reference into a local variable
   /// Structure
   /// ```
@@ -28,6 +30,7 @@ pub enum Operation {
   iload_1,
   invokespecial(u16),
   invokevirtual(u16),
+  new(u16),
   newarray(ArrayType)
 }
 
