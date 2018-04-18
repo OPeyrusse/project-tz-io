@@ -72,8 +72,8 @@ fn create_node_definition_method(
   };
   
   let add_node_idx = 0; // TODO reference the addNode method
-  let mut create_input_array = create_int_array(&vec![0, 1], 1);
-  let mut create_output_array = create_int_array(&vec![1, 2], 2);
+  let create_input_array = create_int_array(&vec![0, 1], 1);
+  let create_output_array = create_int_array(&vec![1, 2], 2);
   let call_to_add_node = vec![
     constructs::Operation::aload(0),
     // Push the name of the node
@@ -108,7 +108,7 @@ fn create_constructor(class: &mut class::JavaClass, definition_methods: &Vec<cla
     parameter_types: vec![]
   };
 
-  let with_slots_idx = 0;
+  let with_slots_idx = get_with_slots_idx(class);
   let mut operations = vec![
     // Configure the slots
     constructs::Operation::aload(0),
@@ -145,15 +145,7 @@ fn create_main(class: &mut class::JavaClass) -> class::PoolIdx {
   };
 
   let this_class_idx = class.class_id;
-  let run_from_idx = class.map_method(
-    &TZ_ENV_CLASS_NAME, 
-    &"runFromSystem",
-    &constructs::Signature {
-      return_type: constants::Type::Void,
-      parameter_types: vec![
-        constants::Type::ObjectArray(1, String::from("java/lang/String"))
-      ]
-    });
+  let run_from_idx = get_run_from_idx(class);
   let operations = vec![
     // Create a new instance of this class
     constructs::Operation::new(this_class_idx),
@@ -174,3 +166,38 @@ fn create_main(class: &mut class::JavaClass) -> class::PoolIdx {
       constructs::Attribute::Code(3, operations)
     ])
 } 
+
+fn get_with_slots_idx(class: &mut class::JavaClass) -> class::PoolIdx {
+  let class_name: String;
+  {
+    class_name = class.get_class_name().expect("No class name set yet");
+  }
+
+  class.map_method(
+    TZ_ENV_CLASS_NAME,
+    &"withSlots", 
+    &constructs::Signature {
+      return_type: constants::Type::Object(class_name),
+      parameter_types: vec![
+        constants::Type::Integer,
+        constants::Type::PrimitiveArray(
+          1,
+          constants::ArrayType::INT),
+        constants::Type::PrimitiveArray(
+          1,
+          constants::ArrayType::INT)
+      ]
+    })
+}
+
+fn get_run_from_idx(class: &mut class::JavaClass) -> class::PoolIdx {
+  class.map_method(
+    &TZ_ENV_CLASS_NAME, 
+    &"runFromSystem",
+    &constructs::Signature {
+      return_type: constants::Type::Void,
+      parameter_types: vec![
+        constants::Type::ObjectArray(1, String::from("java/lang/String"))
+      ]
+    })
+}

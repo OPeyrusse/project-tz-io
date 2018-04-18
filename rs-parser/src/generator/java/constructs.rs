@@ -7,6 +7,7 @@ pub struct Signature {
 }
 
 #[derive(Debug)]
+#[allow(non_camel_case_types)]
 pub enum Operation {
   /// Load a value from an array
   aaload,
@@ -25,7 +26,6 @@ pub enum Operation {
   /// ```
   astore(u8),
   iconst_1,
-  iload_1,
   invokespecial(u16),
   invokevirtual(u16),
   new(u16),

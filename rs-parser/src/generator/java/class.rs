@@ -43,6 +43,15 @@ impl ClassPool {
     }
   }
 
+  pub fn get(&self, idx: &PoolIdx) -> Option<&PoolElement> {
+    for (element, i) in self.pool.iter() {
+      if *i == *idx {
+        return Some(element);
+      }
+    }
+    None
+  }
+
   pub fn map(&mut self, element: PoolElement) -> PoolIdx {
     let idx = self.next_idx;
     match self.pool.insert(element, idx) {
@@ -53,6 +62,10 @@ impl ClassPool {
       Some(ref i) => *i
     }
   }
+
+  pub fn next(&self) -> PoolIdx {
+    self.next_idx
+  }
 }
 
 #[derive(Debug)]
@@ -62,7 +75,7 @@ pub struct JavaClass {
   pub class_id: PoolIdx,
   pub super_class_id: PoolIdx,
   pub interfaces: Vec<PoolIdx>,
-  pub methods: Vec<Method>
+  methods: Vec<Method>
 }
 
 impl JavaClass {
@@ -77,13 +90,24 @@ impl JavaClass {
   }
 
   pub fn set_class(&mut self, classname: &str) {
-    let class_idx = self.map_class(classname);
-    self.class_id = (class_idx + 1) as u16;
+    self.class_id = self.map_class(classname);
   }
 
   pub fn set_super_class(&mut self, classname: &str) {
-    let class_idx = self.map_class(classname);
-    self.class_id = (class_idx + 1) as u16;
+    self.super_class_id = self.map_class(classname);
+  }
+
+  pub fn get_class_name(&self) -> Option<String> {
+    self.class_pool.get(&self.class_id)
+      .and_then(|element| match element {
+        &PoolElement::ClassInfo(ref idx) => Some(idx),
+        _ => None
+      })
+      .and_then(|idx| self.class_pool.get(idx))
+      .and_then(|element| match element {
+        &PoolElement::Utf8Value(ref value) => Some(value.clone()),
+        _ => None
+      })
   }
 
   pub fn create_method(
@@ -105,33 +129,6 @@ impl JavaClass {
 
     name_idx as PoolIdx
   }
-
-  // pub fn map_self_method(
-  //     &mut self, 
-  //     method_name: &str,
-  //     signature: &Signature) -> PoolIdx {
-  //   let name_idx;
-  //   {
-  //     let class_entry = &self.class_pool[self.class_id as usize];
-  //     if let &PoolElement::ClassInfo(idx) = class_entry {
-  //       name_idx = idx;
-  //     } else {
-  //       panic!("Class idx not refering to class info. Got: {:?}", class_entry)
-  //     }
-  //   }
-
-  //   let class_name: String;
-  //   {
-  //     let name_entry = &self.class_pool[name_idx];
-  //     if let &PoolElement::Utf8Value(ref name) = name_entry {
-  //       class_name = name.clone();
-  //     } else {
-  //       panic!("Class entry not refering to string. Got: {:?}", name_entry)
-  //     }
-  //   }
-    
-  //   self.map_method(&class_name, method_name, signature)
-  // }
 
   fn map_name_and_type(
       &mut self, 
@@ -173,4 +170,76 @@ impl JavaClass {
 
 fn create_descriptor(signature: &Signature) -> String {
   panic!("To code")
+}
+
+#[cfg(test)]
+mod tests {
+
+  mod pool {
+    use super::super::*;
+
+    #[test]
+    fn test_map_new_value() {
+      let mut pool = ClassPool::new();
+      let i = pool.map(PoolElement::ClassInfo(1));
+      let e = pool.get(&i);
+      assert_eq!(e.unwrap(), &PoolElement::ClassInfo(1));
+    }
+
+    #[test]
+    fn test_map_multiple_values() {
+      let mut pool = ClassPool::new();
+      let i1 = pool.map(PoolElement::ClassInfo(1));
+      let i2 = pool.map(PoolElement::ClassInfo(2));
+      assert_ne!(i1, i2);
+    }
+
+    #[test]
+    fn test_map_existing_value() {
+      let mut pool = ClassPool::new();
+      let i1 = pool.map(PoolElement::ClassInfo(1));
+      let i2 = pool.map(PoolElement::ClassInfo(1));
+      assert_eq!(i1, i2);
+    }
+
+    #[test]
+    fn test_map_multiple_types() {
+      let mut pool = ClassPool::new();
+      let i1 = pool.map(PoolElement::ClassInfo(1));
+      let i2 = pool.map(PoolElement::NameAndType(2, 3));
+      assert_ne!(i1, i2);
+
+      let e1 = pool.get(&i1).unwrap();
+      assert_eq!(e1, &PoolElement::ClassInfo(1));
+      let e2 = pool.get(&i2).unwrap();
+      assert_eq!(e2, &PoolElement::NameAndType(2, 3));
+    }
+
+  }
+
+  mod base {
+    use super::super::*;
+
+    #[test]
+    fn test_set_class_name() {
+      let mut c = JavaClass::new();
+      c.set_class("a/b/C");
+      assert_eq!(c.class_id, 2); // Mapping name then class info
+    }
+
+    #[test]
+    fn test_get_class_name() {
+      let mut c = JavaClass::new();
+      c.set_class("a/b/C");
+      assert_eq!(c.get_class_name().unwrap(), String::from("a/b/C"));
+    }
+
+    #[test]
+    fn test_set_super_class_name() {
+      let mut c = JavaClass::new();
+      c.set_super_class("a/b/SC");
+      assert_eq!(c.super_class_id, 2); // Mapping name then class info
+    }
+  }
+
 }

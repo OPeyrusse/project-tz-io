@@ -2,6 +2,7 @@
 
 /// Enum class referencing the various possible flag accesses for a class
 #[derive(Debug, PartialEq)]
+#[allow(dead_code)]
 pub enum ClassAccess {
   PUBLIC = 0x0001, // Declared public; may be accessed from outside its package.
   FINAL = 0x0010, // Declared final; no subclasses allowed.
@@ -15,6 +16,7 @@ pub enum ClassAccess {
 }
 
 #[derive(Debug, PartialEq)]
+#[allow(dead_code)]
 pub enum MethodAccess {
   PUBLIC = 0x0001, // Declared public; may be accessed from outside its package.
   PRIVATE = 0x0002, // Declared private; accessible only within the defining class.
@@ -35,6 +37,7 @@ pub enum MethodAccess {
 pub enum Type {
   /// Void type
   Void,
+  Integer,
   /// Array of primitives
   /// Signature:
   /// ```
@@ -48,11 +51,13 @@ pub enum Type {
   ///  1. Number of dimensions
   ///  2. Class name of the array
   /// ```
-  ObjectArray(u8, String)
+  ObjectArray(u8, String),
+  Object(String)
 }
 
 /// Primitive types for an array
 #[derive(Debug, PartialEq, Clone)]
+#[allow(dead_code)]
 pub enum ArrayType {
   BOOLEAN = 4,
   CHAR = 5,
