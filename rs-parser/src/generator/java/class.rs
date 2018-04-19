@@ -11,6 +11,12 @@ pub type PoolIdx = u16;
 pub enum PoolElement {
   Utf8Value(String),
   ClassInfo(PoolIdx),
+  /// Integer constant
+  /// Structure
+  /// ```
+  ///  1. Integer value
+  /// ```
+  Integer(u32),
   /// Info refering to a method
   /// Structure
   /// ```
@@ -108,6 +114,10 @@ impl JavaClass {
         &PoolElement::Utf8Value(ref value) => Some(value.clone()),
         _ => None
       })
+  }
+
+  pub fn create_integer(&mut self, value: u32) -> PoolIdx {
+    self.class_pool.map(ClassPool::Integer(value))
   }
 
   pub fn create_method(

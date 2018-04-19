@@ -25,9 +25,12 @@ pub enum Operation {
   ///  1. Index of the local variable
   /// ```
   astore(u8),
+  /// Store an integer into an array
+  iastore,
   iconst_1,
   invokespecial(u16),
   invokevirtual(u16),
+  ldc(u16),
   new(u16),
   newarray(ArrayType)
 }

@@ -17,18 +17,25 @@ const TZ_ENV_CLASS_NAME: &str = "com/kineolyan/tzio/v1/TzEnv";
 //     .map_err(|e| format!("Failed to write into file. Caused by {}", e))
 // }
 
-fn create_int_array(values: &Vec<u32>, var_idx: u8) -> constructs::Attribute {
+fn create_int_array(
+    class: &mut class::JavaClass,
+    values: &Vec<u32>, 
+    var_idx: u8) -> constructs::Attribute {
+  let array_size = class.create_integer(values.len() as u32);
   let mut operations = vec![
-    // Push the array length to the stack
+    constructs::Operation::ldc(array_size),
     constructs::Operation::newarray(constants::ArrayType::INT),
     constructs::Operation::astore(var_idx)
   ];
   for (i, value) in values.iter().enumerate() {
+    let value_idx = class.create_integer(*value);
+    let index_idx = class.create_integer(*i);
+
     // Add value to array
     operations.push(constructs::Operation::aload(var_idx));
-    // TODO Push the index into the stack
-    // TODO Push the value into the stack
-    operations.push(constructs::Operation::aastore)
+    operations.push(constructs::Operation::ldc(index_idx));
+    operations.push(constructs::Operation::ldc(value_idx));
+    operations.push(constructs::Operation::iastore);
   }
 
   constructs::Attribute::Code(3, operations)
