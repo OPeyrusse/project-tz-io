@@ -57,14 +57,26 @@ fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
   write_u16(file, &access)?;
   write_u16(file, &class.class_id)?;
   write_u16(file, &class.super_class_id)?;
-  write_u8(file, &(class.interfaces.len() as u8))?;
-  for interface_id in &class.interfaces {
-    write_u16(file, interface_id)?;
-  }
+
+  // For now, tell that there are no interfaces
+  write_u16(file, &0);
+  // TODO print the interfaces
+  // write_u8(file, &(class.interfaces.len() as u8))?;
+  // for interface_id in &class.interfaces {
+  //   write_u16(file, interface_id)?;
+  // }
   file.flush()
 }
 
 fn write_class_definition(file: &mut File, class: &JavaClass) -> io::Result<()> {
+  // TODO write the correct writer
+  // No fields
+  write_u16(file, &0);
+  // No methods
+  write_u16(file, &0);
+  // No attributes
+  write_u16(file, &0);
+
   file.flush()
 }
 

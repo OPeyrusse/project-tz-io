@@ -29,7 +29,7 @@ fn create_int_array(
   ];
   for (i, value) in values.iter().enumerate() {
     let value_idx = class.create_integer(*value);
-    let index_idx = class.create_integer(*i);
+    let index_idx = class.create_integer(i as u32);
 
     // Add value to array
     operations.push(constructs::Operation::aload(var_idx));
@@ -79,8 +79,8 @@ fn create_node_definition_method(
   };
   
   let add_node_idx = 0; // TODO reference the addNode method
-  let create_input_array = create_int_array(&vec![0, 1], 1);
-  let create_output_array = create_int_array(&vec![1, 2], 2);
+  let create_input_array = create_int_array(class, &vec![0, 1], 1);
+  let create_output_array = create_int_array(class, &vec![1, 2], 2);
   let call_to_add_node = vec![
     constructs::Operation::aload(0),
     // Push the name of the node

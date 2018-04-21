@@ -8,6 +8,7 @@ pub struct Signature {
 
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
+#[allow(no_unused)]
 pub enum Operation {
   /// Load a value from an array
   aaload,

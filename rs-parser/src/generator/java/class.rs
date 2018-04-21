@@ -69,6 +69,7 @@ impl ClassPool {
     }
   }
 
+  #[cfg(test)]
   pub fn next(&self) -> PoolIdx {
     self.next_idx
   }
@@ -117,7 +118,7 @@ impl JavaClass {
   }
 
   pub fn create_integer(&mut self, value: u32) -> PoolIdx {
-    self.class_pool.map(ClassPool::Integer(value))
+    self.class_pool.map(PoolElement::Integer(value))
   }
 
   pub fn create_method(
