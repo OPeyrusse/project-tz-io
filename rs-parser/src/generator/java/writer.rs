@@ -10,11 +10,11 @@ use std::mem::transmute;
 static MAGIC: [u8; 4] = [0xca_u8, 0xfe_u8, 0xba_u8, 0xbe_u8];
 static VERSIONS: [u8; 4] = [/* minor */0, 0, /* major */0, 52];
 
-// fn write_or_panic(file: &mut Write, buf: &[u8]) {
-//   if let Err(e) = file.write_all(buf) {
-//     panic!("Failed to write into file. Caused by {}", e);
-//   }
-// }
+fn write_or_panic(file: &mut Write, buf: &[u8]) {
+  if let Err(e) = file.write_all(buf) {
+    panic!("Failed to write into file. Caused by {}", e);
+  }
+}
 
 fn write_u8(file: &mut File, value: &u8) -> io::Result<()> {
   let buf: [u8; 1] = [*value];
@@ -71,17 +71,17 @@ fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
 fn write_class_definition(file: &mut File, class: &JavaClass) -> io::Result<()> {
   // TODO write the correct writer
   // No fields
-  write_u16(file, &0);
+  write_u16(file, &0)?;
   // No methods
-  write_u16(file, &0);
+  write_u16(file, &0)?;
   // No attributes
-  write_u16(file, &0);
+  write_u16(file, &0)?;
 
   file.flush()
 }
 
 pub fn write(class: &JavaClass, output_file: &Path) -> io::Result<()> {
-  let mut file = File::open(output_file)?;
+  let mut file = File::create(output_file)?;
   write_header(&mut file)?;
   write_constant_pool(&mut file, class)?;
   write_class_info(&mut file, class)?;

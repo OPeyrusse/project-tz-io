@@ -3,7 +3,12 @@ use std::cmp::Eq;
 use generator::java::constructs::{
   Attribute,
   Signature, 
-  Method};
+  Method
+};
+use generator::java::constants::{
+  ArrayType,
+  Type
+};
 
 pub type PoolIdx = u16;
 
@@ -180,7 +185,39 @@ impl JavaClass {
 }
 
 fn create_descriptor(signature: &Signature) -> String {
-  panic!("To code")
+  let mut descriptor = String::from("(");
+  for param in &signature.parameter_types {
+    type_to_str(&mut descriptor, param);
+  } 
+  descriptor.push(')');
+  { type_to_str(&mut descriptor, &signature.return_type); }
+
+  descriptor
+}
+
+fn type_to_str(out: &mut String, t: &Type) {
+  match t {
+    &Type::Void => out.push('V'),
+    &Type::Integer => out.push('I'),
+    &Type::Object(ref c) => out.push_str(c),
+    &Type::ObjectArray(ref dim, ref object_type) => {
+      (0..*dim).for_each(|_| out.push('['));
+      out.push_str(object_type);
+    },
+    &Type::PrimitiveArray(ref dim, ref prim_type) => {
+      (0..*dim).for_each(|_| out.push('['));
+      match prim_type {
+        &ArrayType::BOOLEAN => out.push('Z'),
+        &ArrayType::CHAR => out.push('C'),
+        &ArrayType::FLOAT => out.push('F'),
+        &ArrayType::DOUBLE => out.push('D'),
+        &ArrayType::BYTE => out.push('B'),
+        &ArrayType::SHORT => out.push('S'),
+        &ArrayType::INT => out.push('I'),
+        &ArrayType::LONG => out.push('J')
+      }
+    }
+  }
 }
 
 #[cfg(test)]

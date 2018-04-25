@@ -8,12 +8,11 @@ pub struct Signature {
 
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
-#[allow(no_unused)]
 pub enum Operation {
   /// Load a value from an array
-  aaload,
+  // aaload,
   /// Push the value into an array at a given index
-  aastore,
+  // aastore,
   /// Lods a reference of a local variable into the stack
   /// Structure
   /// ```
