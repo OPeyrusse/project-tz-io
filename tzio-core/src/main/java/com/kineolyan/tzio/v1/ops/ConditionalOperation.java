@@ -17,6 +17,9 @@ class ConditionalOperation implements Operation, Operation.Shift {
 	/** Predicate on the node value */
 	private final IntPredicate valuePredicate;
 
+	/** Name of the operation for sweet debug */
+	private final String operationName;
+
 	/**
 	 * Constructor
 	 * @param label label to go to when the value predicate is met
@@ -24,9 +27,11 @@ class ConditionalOperation implements Operation, Operation.Shift {
 	 */
 	private ConditionalOperation(
 		final String label,
-		final IntPredicate predicate) {
+		final IntPredicate predicate,
+		final String operationName) {
 		this.targetLabel = label;
 		this.valuePredicate = predicate;
+		this.operationName = operationName;
 	}
 
 	/**
@@ -35,7 +40,7 @@ class ConditionalOperation implements Operation, Operation.Shift {
 	 * @return the operation
 	 */
 	public static ConditionalOperation jez(final String label) {
-		return new ConditionalOperation(label, value -> value == 0);
+		return new ConditionalOperation(label, value -> value == 0, "JEZ");
 	}
 
 	/**
@@ -44,7 +49,7 @@ class ConditionalOperation implements Operation, Operation.Shift {
 	 * @return the operation
 	 */
 	public static ConditionalOperation jnz(final String label) {
-		return new ConditionalOperation(label, value -> value != 0);
+		return new ConditionalOperation(label, value -> value != 0, "JNZ");
 	}
 
 	/**
@@ -53,7 +58,7 @@ class ConditionalOperation implements Operation, Operation.Shift {
 	 * @return the operation
 	 */
 	public static ConditionalOperation jgz(final String label) {
-		return new ConditionalOperation(label, value -> value > 0);
+		return new ConditionalOperation(label, value -> value > 0, "JGZ");
 	}
 
 	/**
@@ -62,7 +67,7 @@ class ConditionalOperation implements Operation, Operation.Shift {
 	 * @return the operation
 	 */
 	public static ConditionalOperation jlz(final String label) {
-		return new ConditionalOperation(label, value -> value < 0);
+		return new ConditionalOperation(label, value -> value < 0, "JLZ");
 	}
 
 	@Override
@@ -77,5 +82,10 @@ class ConditionalOperation implements Operation, Operation.Shift {
 	@Override
 	public int update(final ToIntFunction<String> labelIndex, final int current, final int max) {
 		return labelIndex.applyAsInt(this.targetLabel);
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "[" + this.operationName + "]";
 	}
 }
