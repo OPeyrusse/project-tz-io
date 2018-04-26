@@ -3,7 +3,10 @@ use std::io::Write;
 use std::path::Path;
 use std::io;
 
-use generator::java::class::JavaClass;
+use generator::java::class::{
+  JavaClass,
+  PoolElement
+};
 use generator::java::constants;
 use std::mem::transmute;
 
@@ -16,25 +19,32 @@ fn write_or_panic(file: &mut Write, buf: &[u8]) {
   }
 }
 
-fn write_u8(file: &mut File, value: &u8) -> io::Result<()> {
-  let buf: [u8; 1] = [*value];
+fn write_u8(file: &mut File, value: u8) -> io::Result<()> {
+  let buf: [u8; 1] = [value];
   file.write_all(&buf)
 }
 
-fn write_u16(file: &mut File, value: &u16) -> io::Result<()> {
+fn write_u16(file: &mut File, value: u16) -> io::Result<()> {
   let buf: [u8; 2];
   unsafe {
-    buf = transmute::<u16, [u8; 2]>(*value);
+    buf = transmute::<u16, [u8; 2]>(value);
   }
   file.write_all(&buf)
 }
 
-fn write_u32(file: &mut File, value: &u32) -> io::Result<()> {
+fn write_u32(file: &mut File, value: u32) -> io::Result<()> {
   let buf: [u8; 4];
   unsafe {
-    buf = transmute::<u32, [u8; 4]>(*value);
+    buf = transmute::<u32, [u8; 4]>(value);
   }
   file.write_all(&buf)
+}
+
+fn write_string(file: &mut File, value: &String) -> io::Result<()> {
+  if value.chars().all(|c| 0 < (c as u8) && (c as u8) < 128) {
+    panic!("Unsupported chars in the string: `{}`", value);
+  } 
+  file.write_all(value.as_bytes())
 }
 
 fn write_header(file: &mut File) -> io::Result<()> {
@@ -48,18 +58,28 @@ fn write_header(file: &mut File) -> io::Result<()> {
 }
 
 fn write_constant_pool(file: &mut File, class: &JavaClass) -> io::Result<()> {
+  for (idx, element) in class.pool_iter() {
+    match element {
+      &PoolElement::Utf8Value(ref value) => {
+        write_u8(file, (constants::PoolCode::String as u8))?;
+        write_u16(file, (value.len() as u16))?;
+        write_string(file, value)?;
+      },
+      _ => ()
+    } 
+  }
   file.flush()
 }
 
 fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
   let access: u16 = (constants::ClassAccess::FINAL as u16)
     | (constants::ClassAccess::SUPER as u16);
-  write_u16(file, &access)?;
-  write_u16(file, &class.class_id)?;
-  write_u16(file, &class.super_class_id)?;
+  write_u16(file, access)?;
+  write_u16(file, class.class_id)?;
+  write_u16(file, class.super_class_id)?;
 
   // For now, tell that there are no interfaces
-  write_u16(file, &0);
+  write_u16(file, 0)?;
   // TODO print the interfaces
   // write_u8(file, &(class.interfaces.len() as u8))?;
   // for interface_id in &class.interfaces {
@@ -71,11 +91,11 @@ fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
 fn write_class_definition(file: &mut File, class: &JavaClass) -> io::Result<()> {
   // TODO write the correct writer
   // No fields
-  write_u16(file, &0)?;
+  write_u16(file, 0)?;
   // No methods
-  write_u16(file, &0)?;
+  write_u16(file, 0)?;
   // No attributes
-  write_u16(file, &0)?;
+  write_u16(file, 0)?;
 
   file.flush()
 }

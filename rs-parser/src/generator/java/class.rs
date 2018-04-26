@@ -46,6 +46,25 @@ struct ClassPool {
   next_idx: PoolIdx
 }
 
+pub struct ClassPoolIter<'a> {
+  values: Vec<(&'a PoolIdx, &'a PoolElement)>,
+  idx: usize
+}
+
+impl<'a> Iterator for ClassPoolIter<'a> {
+  type Item = (&'a PoolIdx, &'a PoolElement);
+
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.idx < self.values.len() {
+      let i = self.idx;
+      self.idx += 1;
+      Some(self.values[i])
+    } else {
+      None
+    }
+  }
+}
+
 impl ClassPool {
   fn new() -> ClassPool {
     ClassPool { 
@@ -77,6 +96,14 @@ impl ClassPool {
   #[cfg(test)]
   pub fn next(&self) -> PoolIdx {
     self.next_idx
+  }
+
+  pub fn iter<'a>(&'a self) -> ClassPoolIter<'a> {
+    let mut elements: Vec<(&PoolIdx, &PoolElement)> = self.pool.iter()
+      .map(|(element, idx)| (idx, element))
+      .collect();
+    elements.sort_by(|a, b| a.0.cmp(b.0));
+    ClassPoolIter { values: elements, idx: 0 }
   }
 }
 
@@ -181,6 +208,10 @@ impl JavaClass {
   fn map_utf8_value(&mut self, value: &str) -> PoolIdx {
     let info = PoolElement::Utf8Value(String::from(value));
     self.class_pool.map(info)
+  }
+
+  pub fn pool_iter<'a>(&'a self) -> ClassPoolIter<'a> {
+    self.class_pool.iter()
   }
 }
 
