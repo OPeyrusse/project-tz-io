@@ -14,6 +14,14 @@ public class DataSlot implements InputSlot, OutputSlot, TransactionalElement {
 	/** Flag marking that the value has been consumed */
 	private boolean hasValueAfterStep = false;
 
+	/**
+	 * Gets the value of the slot.
+	 * @return the value
+	 */
+	public int getValue() {
+		return this.value;
+	}
+
 	@Override
 	public boolean canRead() {
 		return this.hasValue && this.hasValueAfterStep;
