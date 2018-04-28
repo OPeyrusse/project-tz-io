@@ -244,7 +244,9 @@ fn type_to_str(out: &mut String, t: &Type) {
     },
     &Type::ObjectArray(ref dim, ref object_type) => {
       (0..*dim).for_each(|_| out.push('['));
+      out.push('L');
       out.push_str(object_type);
+      out.push(';');
     },
     &Type::PrimitiveArray(ref dim, ref prim_type) => {
       (0..*dim).for_each(|_| out.push('['));
