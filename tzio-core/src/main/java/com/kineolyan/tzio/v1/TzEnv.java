@@ -6,11 +6,12 @@ import com.kineolyan.tzio.v1.slot.InputQueueSlot;
 import com.kineolyan.tzio.v1.slot.InputSlot;
 import com.kineolyan.tzio.v1.slot.OutputSlot;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -22,9 +23,6 @@ import java.util.stream.Stream;
  * </p>
  */
 public class TzEnv {
-
-	/** Output value marking the absence of value for the given output slot */
-	public static int NO_OUTPUT = -1;
 
 	/** Map of node executions indexed by node names */
 	private Map<String, NodeExecution> nodes;
@@ -40,7 +38,7 @@ public class TzEnv {
 	/** Output slots to read to produce data */
 	private DataSlot[] outputs;
 	/** Entity consuming data produced by this TZ-IO program */
-	private Consumer<int[]> consumer;
+	private Consumer<OptionalInt[]> consumer;
 
 	/**
 	 * Constructor
@@ -113,7 +111,7 @@ public class TzEnv {
 	 * @param consumer consumer of produced data
 	 * @return this
 	 */
-	public TzEnv produceInto(Consumer<int[]> consumer) {
+	public TzEnv produceInto(Consumer<OptionalInt[]> consumer) {
 		this.consumer = consumer;
 		return this;
 	}
@@ -140,10 +138,27 @@ public class TzEnv {
 
 		// Check for an output
 		if (Stream.of(this.outputs).anyMatch(DataSlot::canRead)) {
-			final int[] output = Stream.of(this.outputs)
-				.mapToInt(o -> o.canRead() ? o.read() : NO_OUTPUT)
-				.toArray();
+			final OptionalInt[] output = Stream.of(this.outputs)
+				.map(o -> o.canRead() ? OptionalInt.of(o.read()) : OptionalInt.empty())
+				.toArray(OptionalInt[]::new);
 			this.consumer.accept(output);
+		}
+	}
+
+	public void runFromSystem(final String[] args) {
+		produceInto(outputs -> {
+			System.out.println(Stream.of(outputs)
+				.map(o -> o.isPresent() ? String.valueOf(o.getAsInt()) : "")
+				.collect(Collectors.joining(",")));
+		});
+
+		// Why not, but two threads are needed, one to tick, the other to consume the input
+		final Scanner scanner = new Scanner(System.in);
+		while (scanner.hasNextLine()) {
+			final int[] input = Stream.of(scanner.nextLine().split("\\s*,\\s*"))
+				.mapToInt(Integer::parseInt)
+				.toArray();
+			consume(input);
 		}
 	}
 

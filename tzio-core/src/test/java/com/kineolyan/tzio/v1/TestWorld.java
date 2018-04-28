@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,8 +39,8 @@ public class TestWorld {
 
 		final List<List<Integer>> outputs = new ArrayList<>();
 		env.produceInto(values -> outputs.add(
-			IntStream.of(values)
-				.boxed()
+			Stream.of(values)
+				.map(OptionalInt::getAsInt)
 				.collect(Collectors.toList())));
 		env.consume(new int[] {1});
 		env.consume(new int[] {2});
