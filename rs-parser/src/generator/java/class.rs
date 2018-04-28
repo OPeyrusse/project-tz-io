@@ -93,8 +93,7 @@ impl ClassPool {
     }
   }
 
-  #[cfg(test)]
-  pub fn next(&self) -> PoolIdx {
+  pub fn size(&self) -> PoolIdx {
     self.next_idx
   }
 
@@ -210,8 +209,16 @@ impl JavaClass {
     self.class_pool.map(info)
   }
 
+  /// Gets an iterator on all elements of the class pool
+  /// 
+  /// Elements are enumrated by increasing pool idx.
   pub fn pool_iter<'a>(&'a self) -> ClassPoolIter<'a> {
     self.class_pool.iter()
+  }
+
+  /// Gets the size of the class pool
+  pub fn pool_size(&self) -> PoolIdx {
+    self.class_pool.size()
   }
 }
 
@@ -230,7 +237,11 @@ fn type_to_str(out: &mut String, t: &Type) {
   match t {
     &Type::Void => out.push('V'),
     &Type::Integer => out.push('I'),
-    &Type::Object(ref c) => out.push_str(c),
+    &Type::Object(ref c) => {
+      out.push('L');
+      out.push_str(c);
+      out.push(';');
+    },
     &Type::ObjectArray(ref dim, ref object_type) => {
       (0..*dim).for_each(|_| out.push('['));
       out.push_str(object_type);

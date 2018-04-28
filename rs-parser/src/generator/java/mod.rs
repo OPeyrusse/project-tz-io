@@ -3,7 +3,7 @@ mod writer;
 mod constants;
 mod constructs;
 
-use std::path::Path;
+use std::path::PathBuf;
 
 use parser::ParsingTree;
 use parser::syntax::{NodeBlock};
@@ -41,11 +41,14 @@ fn create_int_array(
   constructs::Attribute::Code(3, operations)
 }
 
-pub fn create_main_file(tree: &ParsingTree, output_file: &Path) -> Result<(), String> {
+pub fn create_main_file(
+    tree: &ParsingTree, 
+    package: &str,
+    output_dir: &PathBuf) -> Result<(), String> {
   let mut class = class::JavaClass::new();
 
   let mut classname = String::from("com/kineolyan/tzio/");
-  classname.push_str(output_file.file_stem().unwrap().to_str().unwrap());
+  classname.push_str(package);
   classname.push_str("/Main");
   class.set_class(&classname);
 
@@ -55,17 +58,15 @@ pub fn create_main_file(tree: &ParsingTree, output_file: &Path) -> Result<(), St
   for (i, node) in tree.iter().enumerate() {
     let pool_idx = create_node_definition_method(i, node, &mut class);
     definition_methods.push(pool_idx);
-  //   let mut file = output_dir.clone();
-  //   file.set_file_name(node.0.get_id());
-  //   file.set_extension("class");
-
-  //   java::create_node_file(node, file.as_path())?;
   }
 
   create_constructor(&mut class, &definition_methods);
   create_main(&mut class);
 
-  writer::write(&class, output_file)
+  let mut output_file = output_dir.clone();
+  output_file.push("Main");
+  output_file.set_extension("class");
+  writer::write(&class, output_file.as_path())
     .map_err(|e| format!("Failed to write into file. Caused by {}", e))
 }
 

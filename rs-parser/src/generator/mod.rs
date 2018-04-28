@@ -25,10 +25,8 @@ fn prepare_output<'a>(filename: &'a str, target_dir: &'a str) -> Result<PathBuf,
 }
 
 fn generate_program(tree: &ParsingTree, output_dir: PathBuf) -> Result<(), String> {
-  let mut main_file = output_dir.clone();
-  main_file.push("Main");
-  main_file.set_extension("class");
-  java::create_main_file(&tree, main_file.as_path())
+  let package = output_dir.file_stem().unwrap().to_str().unwrap();
+  java::create_main_file(&tree, package, &output_dir)
 }
 
 pub fn generate(result: ParsingTree, filename: &str, target_dir: &str) -> Result<(), String> {
