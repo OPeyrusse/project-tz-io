@@ -1,17 +1,15 @@
 package com.kineolyan.tzio.v1;
 
+import com.kineolyan.tzio.v1.execs.SystemExecutor;
 import com.kineolyan.tzio.v1.ops.Operation;
 import com.kineolyan.tzio.v1.slot.DataSlot;
 import com.kineolyan.tzio.v1.slot.InputQueueSlot;
 import com.kineolyan.tzio.v1.slot.InputSlot;
 import com.kineolyan.tzio.v1.slot.OutputSlot;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -145,21 +143,12 @@ public class TzEnv {
 		}
 	}
 
+	/**
+	 * Runs this environment using the Java system.
+	 * @param args program arguments
+	 */
 	public void runFromSystem(final String[] args) {
-		produceInto(outputs -> {
-			System.out.println(Stream.of(outputs)
-				.map(o -> o.isPresent() ? String.valueOf(o.getAsInt()) : "")
-				.collect(Collectors.joining(",")));
-		});
-
-		// Why not, but two threads are needed, one to tick, the other to consume the input
-		final Scanner scanner = new Scanner(System.in);
-		while (scanner.hasNextLine()) {
-			final int[] input = Stream.of(scanner.nextLine().split("\\s*,\\s*"))
-				.mapToInt(Integer::parseInt)
-				.toArray();
-			consume(input);
-		}
+		SystemExecutor.fromSystem().run(this);
 	}
 
 	/**
