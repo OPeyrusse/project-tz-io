@@ -46,7 +46,7 @@ public class SystemExecutor implements TzExecutor {
 		env.produceInto(outputs -> {
 			this.out.println(Stream.of(outputs)
 				.map(o -> o.isPresent() ? String.valueOf(o.getAsInt()) : "")
-				.collect(Collectors.joining(SPLIT_CHAR)));
+				.collect(Collectors.joining(SPLIT_CHAR, "> ", "")));
 		});
 
 		final BlockingDeque<int[]> inputs = new LinkedBlockingDeque<>();
@@ -62,9 +62,11 @@ public class SystemExecutor implements TzExecutor {
 				}
 			},
 			"input-thread");
+		inputThread.setDaemon(true);
 		inputThread.setUncaughtExceptionHandler((t, err) -> errors.offer(err));
-		inputThread.run();
+		inputThread.start();
 
+		this.out.println("System up. Waiting for inputs:");
 		while (errors.peek() == null) {
 			// Look for entries
 			final int[] input = inputs.poll();
