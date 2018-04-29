@@ -8,7 +8,7 @@ import java.util.stream.IntStream;
 /**
  * Reference to a static value.
  */
-public class ValueReference implements InputReference {
+class ValueReference implements InputReference {
 
 	/** Cache of common value */
 	private static ValueReference[] CACHE;

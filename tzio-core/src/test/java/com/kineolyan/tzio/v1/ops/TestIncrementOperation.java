@@ -1,8 +1,7 @@
 package com.kineolyan.tzio.v1.ops;
 
 import com.kineolyan.tzio.v1.Node;
-import com.kineolyan.tzio.v1.ref.AccReference;
-import com.kineolyan.tzio.v1.ref.ValueReference;
+import com.kineolyan.tzio.v1.ref.References;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,7 @@ public class TestIncrementOperation {
 	@Test
 	void testAddOperationWithValue() {
 		this.node.setAccValue(54);
-		final Operation.Shift shift = Operations.ADD(ValueReference.of(46)).execute(this.node);
+		final Operation.Shift shift = Operations.ADD(References.value(46)).execute(this.node);
 
 		Assertions.assertThat(this.node.getAccValue()).isEqualTo(100);
 		OperationTestUtil.assertThat(shift).shiftToNext();
@@ -31,7 +30,7 @@ public class TestIncrementOperation {
 	@Test
 	void testAddOperationWithAcc() {
 		this.node.setAccValue(35);
-		final Operation.Shift shift = Operations.ADD(AccReference.INSTANCE).execute(this.node);
+		final Operation.Shift shift = Operations.ADD(References.acc()).execute(this.node);
 
 		Assertions.assertThat(this.node.getAccValue()).isEqualTo(70);
 		OperationTestUtil.assertThat(shift).shiftToNext();

@@ -1,9 +1,6 @@
 package com.kineolyan.tzio.v1;
 
-import com.kineolyan.tzio.v1.ref.DataReference;
-import com.kineolyan.tzio.v1.ref.InputReference;
-import com.kineolyan.tzio.v1.ref.OutputReference;
-import com.kineolyan.tzio.v1.ref.ValueReference;
+import com.kineolyan.tzio.v1.ref.*;
 import com.kineolyan.tzio.v1.slot.InputSlot;
 import com.kineolyan.tzio.v1.slot.OutputSlot;
 import com.sun.jdi.Value;
@@ -33,7 +30,7 @@ class TestNode {
 	@Test
 	void testMoveValue() {
 		final Node node = defaultNode();
-		final InputReference input = ValueReference.of(112);
+		final InputReference input = References.value(112);
 		final DataReference output = new DataReference();
 		node.moveValue(input, output);
 
@@ -43,7 +40,7 @@ class TestNode {
 	@Test
 	void testAddValue() {
 		final Node node = defaultNode();
-		final InputReference input = ValueReference.of(13);
+		final InputReference input = References.value(13);
 
 		node.setAccValue(11);
 		node.addValue(input);
@@ -53,7 +50,7 @@ class TestNode {
 	@Test
 	void testSubValue() {
 		final Node node = defaultNode();
-		final InputReference input = ValueReference.of(51);
+		final InputReference input = References.value(51);
 
 		node.setAccValue(10);
 		node.subValue(input);

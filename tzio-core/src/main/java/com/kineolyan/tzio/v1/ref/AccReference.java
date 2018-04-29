@@ -5,7 +5,7 @@ import com.kineolyan.tzio.v1.Node;
 /**
  * Reference to the node internal value.
  */
-public class AccReference implements InputReference, OutputReference {
+class AccReference implements InputReference, OutputReference {
 
 	/** Singleton instance of this reference */
 	public static AccReference INSTANCE = new AccReference();

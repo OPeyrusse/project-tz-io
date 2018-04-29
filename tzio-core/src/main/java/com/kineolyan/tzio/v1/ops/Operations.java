@@ -3,6 +3,9 @@ package com.kineolyan.tzio.v1.ops;
 import com.kineolyan.tzio.v1.ref.InputReference;
 import com.kineolyan.tzio.v1.ref.OutputReference;
 
+/**
+ * Public facade for creating operations.
+ */
 public class Operations {
 
 	private Operations() {}

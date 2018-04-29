@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 /**
  * Reference to a slot, either input or output.
  */
-public class SlotReference implements InputReference, OutputReference {
+class SlotReference implements InputReference, OutputReference {
 
 	/** Internal cache of references, commonly addressed */
 	private static final SlotReference[] CACHE;

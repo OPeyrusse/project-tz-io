@@ -1,14 +1,13 @@
 package com.kineolyan.tzio.v1;
 
 import com.kineolyan.tzio.v1.ops.Operations;
-import com.kineolyan.tzio.v1.ref.SlotReference;
+import com.kineolyan.tzio.v1.ref.References;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +25,7 @@ public class TestWorld {
 				new int[] {1},
 				List.of(
 					Operations.LABEL("start"),
-					Operations.MOV(SlotReference.of(1), SlotReference.of(1))
+					Operations.MOV(References.inSlot(1), References.outSlot(1))
 				))
 			.addNode(
 				"b",
@@ -34,7 +33,7 @@ public class TestWorld {
 				new int[] {1},
 				new int[] {2},
 				List.of(
-					Operations.MOV(SlotReference.of(1), SlotReference.of(1))
+					Operations.MOV(References.inSlot(1), References.outSlot(1))
 				));
 
 		final List<List<Integer>> outputs = new ArrayList<>();

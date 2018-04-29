@@ -1,8 +1,7 @@
 package com.kineolyan.tzio.v1.ops;
 
 import com.kineolyan.tzio.v1.Node;
-import com.kineolyan.tzio.v1.ref.SlotReference;
-import com.kineolyan.tzio.v1.ref.ValueReference;
+import com.kineolyan.tzio.v1.ref.References;
 import com.kineolyan.tzio.v1.slot.DataSlot;
 import com.kineolyan.tzio.v1.slot.InputSlot;
 import com.kineolyan.tzio.v1.slot.OutputSlot;
@@ -30,7 +29,7 @@ class TestMovOperation {
 		final DataSlot outputSlot = getOutput(this.node, 2);
 		assertThat(outputSlot.canWrite()).isTrue();
 
-		final Operation.Shift shift = Operations.MOV(SlotReference.of(1), SlotReference.of(2))
+		final Operation.Shift shift = Operations.MOV(References.inSlot(1), References.outSlot(2))
 			.execute(this.node);
 		outputSlot.onStepEnd();
 		inputSlot.onStepEnd();
@@ -49,7 +48,7 @@ class TestMovOperation {
 		final DataSlot outputSlot = getOutput(this.node, 2);
 		assertThat(outputSlot.canWrite()).isTrue();
 
-		final Operation.Shift shift = Operations.MOV(SlotReference.of(1), SlotReference.of(2))
+		final Operation.Shift shift = Operations.MOV(References.inSlot(1), References.outSlot(2))
 			.execute(this.node);
 		outputSlot.onStepEnd();
 		inputSlot.onStepEnd();
@@ -71,7 +70,7 @@ class TestMovOperation {
 		outputSlot.onStepEnd();
 		assertThat(outputSlot.canWrite()).isFalse();
 
-		final Operation.Shift shift = Operations.MOV(SlotReference.of(1), SlotReference.of(2))
+		final Operation.Shift shift = Operations.MOV(References.inSlot(1), References.outSlot(2))
 			.execute(this.node);
 		outputSlot.onStepEnd();
 		inputSlot.onStepEnd();
@@ -88,8 +87,8 @@ class TestMovOperation {
 		assertThat(outputSlot.canWrite()).isTrue();
 
 		final Operation.Shift shift = Operations.MOV(
-				ValueReference.of(53),
-				SlotReference.of(1))
+				References.value(53),
+				References.outSlot(1))
 			.execute(this.node);
 		assertThat(shift).isEqualTo(Operation.Shift.NEXT);
 		assertThat(outputSlot.getValue()).isEqualTo(53);
