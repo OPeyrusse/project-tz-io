@@ -73,9 +73,9 @@ pub enum ArrayType {
 #[allow(dead_code)]
 pub enum PoolCode {
   Class = 7,
-  Fieldref = 9,
-  Methodref = 10,
-  InterfaceMethodref = 11,
+  FieldRef = 9,
+  MethodRef = 10,
+  InterfaceMethodRef = 11,
   String = 8,
   Integer = 3,
   Float = 4,

@@ -72,7 +72,7 @@ pub fn create_main_file(
 
 fn create_node_definition_method(
     i: usize,
-    node: &NodeBlock,
+    _node: &NodeBlock,
     class: &mut class::JavaClass) -> class::PoolIdx {
   let signature = constructs::Signature {
     return_type: constants::Type::Void,

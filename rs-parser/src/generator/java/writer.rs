@@ -39,13 +39,15 @@ fn write_u16(file: &mut File, value: u16) -> io::Result<()> {
   file.write_all(&buf)
 }
 
-// fn write_u32(file: &mut File, value: u32) -> io::Result<()> {
-//   let buf: [u8; 4];
-//   unsafe {
-//     buf = transmute::<u32, [u8; 4]>(value);
-//   }
-//   file.write_all(&buf)
-// }
+fn write_u32(file: &mut File, value: u32) -> io::Result<()> {
+  let buf: [u8; 4] = [
+    (value >> 24) as u8,
+    ((value >> 16) & 0xff) as u8,
+    ((value >> 8) & 0xff) as u8,
+    (value & 0xff) as u8 
+  ];
+  file.write_all(&buf)
+}
 
 fn write_string(file: &mut File, value: &String) -> io::Result<()> {
   let bytes = value.as_bytes();
@@ -68,15 +70,28 @@ fn write_constant_pool(file: &mut File, class: &JavaClass) -> io::Result<()> {
   for (_idx, element) in class.pool_iter() {
     match element {
       &PoolElement::Utf8Value(ref value) => {
-        write_u8(file, (constants::PoolCode::Utf8 as u8))?;
-        write_u16(file, (value.len() as u16))?;
+        write_u8(file, constants::PoolCode::Utf8 as u8)?;
+        write_u16(file, value.len() as u16)?;
         write_string(file, value)?;
       },
       &PoolElement::ClassInfo(c_idx) => {
-        write_u8(file, (constants::PoolCode::Class as u8))?;
+        write_u8(file, constants::PoolCode::Class as u8)?;
         write_u16(file, c_idx)?;
       },
-      _ => ()
+      &PoolElement::Integer(value) => {
+        write_u8(file, constants::PoolCode::Integer as u8)?;
+        write_u32(file, value)?;
+      },
+      &PoolElement::MethodRef(class_idx, name_idx) => {
+        write_u8(file, constants::PoolCode::MethodRef as u8)?;
+        write_u16(file, class_idx)?;
+        write_u16(file, name_idx)?;
+      },
+      &PoolElement::NameAndType(name_idx, descriptor_idx) => {
+        write_u8(file, constants::PoolCode::NameAndType as u8)?;
+        write_u16(file, name_idx)?;
+        write_u16(file, descriptor_idx)?;
+      }
     } 
   }
   file.flush()
@@ -99,7 +114,7 @@ fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
   file.flush()
 }
 
-fn write_class_definition(file: &mut File, class: &JavaClass) -> io::Result<()> {
+fn write_class_definition(file: &mut File, _class: &JavaClass) -> io::Result<()> {
   // TODO write the correct writer
   // No fields
   write_u16(file, 0)?;
