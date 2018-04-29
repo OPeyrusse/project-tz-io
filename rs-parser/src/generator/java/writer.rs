@@ -105,12 +105,10 @@ fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
   write_u16(file, class.super_class_id)?;
 
   // For now, tell that there are no interfaces
-  write_u16(file, 0)?;
-  // TODO print the interfaces
-  // write_u8(file, &(class.interfaces.len() as u8))?;
-  // for interface_id in &class.interfaces {
-  //   write_u16(file, interface_id)?;
-  // }
+  write_u16(file, class.interfaces.len() as u16)?;
+  for interface_id in &class.interfaces {
+    write_u16(file, *interface_id)?;
+  }
   file.flush()
 }
 

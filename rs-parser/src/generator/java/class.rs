@@ -102,6 +102,7 @@ impl ClassPool {
       .map(|(element, idx)| (idx, element))
       .collect();
     elements.sort_by(|a, b| a.0.cmp(b.0));
+    println!("elts {:?}", elements);
     ClassPoolIter { values: elements, idx: 0 }
   }
 }
