@@ -83,14 +83,16 @@ impl ClassPool {
   }
 
   pub fn map(&mut self, element: PoolElement) -> PoolIdx {
-    let idx = self.next_idx;
-    match self.pool.insert(element, idx) {
-      None => {
-        self.next_idx += 1;
-        idx
-      },
-      Some(ref i) => *i
+    let mut new_idx = Some(self.next_idx);
+    let entry = self.pool.entry(element).or_insert_with(|| {
+      let idx = new_idx.unwrap();
+      new_idx = None;
+      idx
+    });
+    if new_idx.is_none() {
+      self.next_idx += 1;
     }
+    *entry
   }
 
   pub fn size(&self) -> PoolIdx {
@@ -290,6 +292,14 @@ mod tests {
     }
 
     #[test]
+    fn test_pool_size() {
+      let mut pool = ClassPool::new();
+      pool.map(PoolElement::ClassInfo(1));
+      pool.map(PoolElement::ClassInfo(2));
+      assert_eq!(pool.size(), 3);
+    }
+
+    #[test]
     fn test_map_multiple_values() {
       let mut pool = ClassPool::new();
       let i1 = pool.map(PoolElement::ClassInfo(1));
@@ -303,6 +313,8 @@ mod tests {
       let i1 = pool.map(PoolElement::ClassInfo(1));
       let i2 = pool.map(PoolElement::ClassInfo(1));
       assert_eq!(i1, i2);
+      assert_eq!(pool.size(), 2);
+      assert_eq!(pool.get(&i1), Some(&PoolElement::ClassInfo(1)));
     }
 
     #[test]
@@ -362,9 +374,30 @@ mod tests {
       let idx = c.map_integer(132);
       assert_eq!(idx, 1u16);
       assert_eq!(c.pool_size(), 2);
+      let integer = c.pool_iter().nth(0).expect("No item");
+      assert_eq!(integer.0, &idx);
+      assert_eq!(integer.1, &PoolElement::Integer(132));
+    }
+
+    #[test]
+    fn test_map_many_integers() {
+      let mut c = JavaClass::new();
+      let idx_132 = c.map_integer(132);
+      let idx_48 = c.map_integer(48);
+      assert_ne!(idx_132, idx_48);
+      let mut elements: Vec<Option<(&PoolIdx, &PoolElement)>> = vec![None; c.pool_size() as usize];
+      {
+        let elts = &mut elements;
+        c.pool_iter().for_each(|e| {
+          elts[*e.0 as usize] = Some(e);
+        });
+      }
       assert_eq!(
-        c.pool_iter().nth(0).expect("No item").1,
-        &PoolElement::Integer(132));
+        elements[idx_132 as usize].unwrap(),
+        (&idx_132, &PoolElement::Integer(132)));
+      assert_eq!(
+        elements[idx_48 as usize].unwrap(),
+        (&idx_48, &PoolElement::Integer(48)));
     }
 
     #[test]
