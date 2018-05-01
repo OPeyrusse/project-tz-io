@@ -21,15 +21,15 @@ fn create_int_array(
     class: &mut class::JavaClass,
     values: &Vec<u32>, 
     var_idx: u8) -> constructs::Attribute {
-  let array_size = class.create_integer(values.len() as u32);
+  let array_size = class.map_integer(values.len() as u32);
   let mut operations = vec![
     constructs::Operation::ldc(array_size),
     constructs::Operation::newarray(constants::ArrayType::INT),
     constructs::Operation::astore(var_idx)
   ];
   for (i, value) in values.iter().enumerate() {
-    let value_idx = class.create_integer(*value);
-    let index_idx = class.create_integer(i as u32);
+    let value_idx = class.map_integer(*value);
+    let index_idx = class.map_integer(i as u32);
 
     // Add value to array
     operations.push(constructs::Operation::aload(var_idx));

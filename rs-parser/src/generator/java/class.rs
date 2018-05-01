@@ -149,10 +149,16 @@ impl JavaClass {
       })
   }
 
-  pub fn create_integer(&mut self, value: u32) -> PoolIdx {
+  pub fn map_integer(&mut self, value: u32) -> PoolIdx {
     self.class_pool.map(PoolElement::Integer(value))
   }
 
+  /// Creates a new method in the class
+  /// 
+  /// Unlike #map_method that creates a reference to an existing
+  /// method, this method creates a new method for the class.
+  /// The declaration includes the operations executed by the method
+  /// as well as its metadata
   pub fn create_method(
       &mut self, 
       access: u16,
@@ -165,12 +171,12 @@ impl JavaClass {
 
     self.methods.push(Method {
       access: access,
-      name_index: name_idx as PoolIdx,
-      descriptor_index: descriptor_idx as PoolIdx,
+      name_index: name_idx,
+      descriptor_index: descriptor_idx,
       attributes: attributes
     });
 
-    name_idx as PoolIdx
+    name_idx
   }
 
   fn map_name_and_type(
@@ -183,6 +189,10 @@ impl JavaClass {
     self.class_pool.map(name_and_type)
   }
 
+  /// Maps a method existing in this or another object.
+  /// 
+  /// It refers to the method by the class name, the method name
+  /// and its signature
   pub fn map_method(
       &mut self, 
       class_name: &str, 
@@ -312,6 +322,8 @@ mod tests {
 
   mod base {
     use super::super::*;
+    use generator::java::constructs::Signature;
+    use generator::java::constants::{Type, ArrayType};
 
     #[test]
     fn test_set_class_name() {
@@ -332,6 +344,106 @@ mod tests {
       let mut c = JavaClass::new();
       c.set_super_class("a/b/SC");
       assert_eq!(c.super_class_id, 2); // Mapping name then class info
+    }
+
+    #[test]
+    fn test_class_and_super_names() {
+      let mut c = JavaClass::new();
+      c.set_class("a/b/C");
+      c.set_super_class("a/b/SC");
+      assert_eq!(c.class_id < c.super_class_id, true);
+      assert_eq!(c.super_class_id < c.pool_size(), true);
+      assert_eq!(c.pool_size(), 5);
+    }
+
+    #[test]
+    fn test_map_integer() {
+      let mut c = JavaClass::new();
+      let idx = c.map_integer(132);
+      assert_eq!(idx, 1u16);
+      assert_eq!(c.pool_size(), 2);
+      assert_eq!(
+        c.pool_iter().nth(0).expect("No item").1,
+        &PoolElement::Integer(132));
+    }
+
+    #[test]
+    fn test_map_method() {
+      let mut c = JavaClass::new();
+      let method_idx = c.map_method(
+        &"a/C1", 
+        &"m1",
+        &Signature {
+          return_type: Type::ObjectArray(2, String::from("a/C2")),
+          parameter_types: vec![
+            Type::Integer,
+            Type::PrimitiveArray(1, ArrayType::LONG)
+          ]
+        });
+
+      assert_eq!(method_idx < c.pool_size(), true);
+      assert_eq!(
+        c.pool_size(), 
+        2 + // Class name and info
+        2 + // method name and descriptor
+        1 + // name_and_type
+        1 + // method ref
+        1); // as always for the count
+      
+      // Test the indexes
+      let indexes: Vec<&u16> = c.pool_iter()
+        .map(|elt| elt.0)
+        .collect();
+      for i in 0..(indexes.len() - 1) {
+        let i1 = *indexes[i];
+        let i2 = *indexes[i + 1];
+        assert_eq!(
+          i1 < i2,
+          true,
+          "Invalid indexes {} >= {}", i1, i2);
+      }
+
+      let elements: Vec<&PoolElement> = c.pool_iter()
+        .map(|elt| elt.1)
+        .collect();
+      // Test the class info
+      let class_info = elements.iter().find(|&elt| match elt {
+        &&PoolElement::ClassInfo(_i) => true,
+        _ => false
+      }).expect(&format!("No class info in {:?}", elements));
+      if let &PoolElement::ClassInfo(idx) = *class_info {
+        assert_eq!(
+          *elements[(idx - 1) as usize],
+          PoolElement::Utf8Value(String::from("a/C1")));
+      }
+
+      // Test the name type
+      let name_type = elements.iter().find(|&elt| match elt {
+        &&PoolElement::NameAndType(_i, _j) => true,
+        _ => false
+      }).expect(&format!("No name & type in {:?}", elements));
+      if let &PoolElement::NameAndType(m_idx, d_idx) = *name_type {
+        assert_eq!(
+          *elements[(m_idx - 1) as usize],
+          PoolElement::Utf8Value(String::from("m1")));
+        assert_eq!(
+          *elements[(d_idx - 1) as usize],
+          PoolElement::Utf8Value(String::from("(I[J)[[La/C2;")));
+      }
+
+      // Test the method ref
+      let method_ref = elements.iter().find(|&elt| match elt {
+        &&PoolElement::MethodRef(_i, _j) => true,
+        _ => false
+      }).expect(&format!("No method ref in {:?}", elements));
+      if let &PoolElement::MethodRef(c_idx, nmt_idx) = *method_ref {
+        assert_eq!(
+          elements[(c_idx - 1) as usize],
+          *class_info);
+        assert_eq!(
+          elements[(nmt_idx - 1) as usize],
+          *name_type);
+      }
     }
   }
 
