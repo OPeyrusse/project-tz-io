@@ -8,6 +8,10 @@ use generator::java::class::{
   PoolElement
 };
 use generator::java::constants;
+use generator::java::constructs::{
+  Attribute,
+  Operation
+};
 
 static MAGIC: [u8; 4] = [0xca_u8, 0xfe_u8, 0xba_u8, 0xbe_u8];
 static VERSIONS: [u8; 4] = [/* minor */0, 0, /* major */0, 52];
@@ -112,16 +116,103 @@ fn write_class_info(file: &mut File, class: &JavaClass) -> io::Result<()> {
   file.flush()
 }
 
-fn write_class_definition(file: &mut File, _class: &JavaClass) -> io::Result<()> {
+fn write_class_definition(file: &mut File, class: &JavaClass) -> io::Result<()> {
   // TODO write the correct writer
   // No fields
   write_u16(file, 0)?;
-  // No methods
-  write_u16(file, 0)?;
+
+  // Write methods
+  write_u16(file, class.methods.len() as u16)?;
+  for method in &class.methods {
+    write_u16(file, method.access)?;
+    write_u16(file, method.name_index)?;
+    write_u16(file, method.descriptor_index)?;
+    write_u16(file, method.attributes.len() as u16)?;
+    for entry in &method.attributes {
+      write_attribute(file, entry)?;
+    }
+  }
+  
   // No attributes
   write_u16(file, 0)?;
 
   file.flush()
+}
+
+fn write_attribute(file: &mut File, &(ref idx, ref attribute): &(u16, Attribute)) -> io::Result<()> {
+  match attribute {
+    &Attribute::Code(ref max_stack, ref operations) => {
+      write_u16(file, *idx)?;
+
+      let attribute_length: u32 = 1234; // TODO compute the correct length
+      write_u32(file, attribute_length)?;
+      write_u16(file, *max_stack)?;
+
+      let local_vars_count: u8 = operations.iter()
+        .map(|op| match op {
+          &Operation::aload(ref idx) => *idx,
+          &Operation::astore(ref idx) => *idx,
+          _ => 0u8
+        })
+        .max().unwrap_or(0u8);
+      write_u16(file, local_vars_count as u16)?;
+      let code_length: u32 = 234; // TODO: compute the correct code length
+      write_u32(file, code_length)?;
+      for operation in operations {
+        write_operation(file, operation)?;
+      }
+
+      // Not used so far
+      write_u16(file, 0)?; // No exception tables
+      write_u16(file, 0) // No attributes
+    }
+  }
+}
+
+fn write_operation(file: &mut File, operation: &Operation) -> io::Result<()> {
+  match operation {
+    &Operation::aload(ref idx) => {
+      // if idx > 3 { // TODO write the optimization
+      write_u8(file, 25)?;
+      write_u8(file, *idx)
+    },
+    &Operation::astore(ref idx) => {
+      write_u8(file, 58)?;
+      write_u8(file, *idx)
+    },
+    &Operation::iastore => {
+      write_u8(file, 79)
+    },
+    &Operation::iconst_1 => {
+      write_u8(file, 4)
+    },
+    &Operation::invokespecial(ref idx) => {
+      write_u8(file, 183)?;
+      write_u16(file, *idx)
+    },
+    &Operation::invokevirtual(ref idx) => {
+      write_u8(file, 182)?;
+      write_u16(file, *idx)
+    },
+    &Operation::ldc(ref idx) => {
+      // Optimize using ldc or ldc_w
+      if *idx < 256 {
+        write_u8(file, 18)?;
+        write_u8(file, (*idx & 0xff) as u8)
+      } else {
+        write_u8(file, 19)?;
+        write_u16(file, *idx)
+      }
+    },
+    &Operation::new(ref idx) => {
+      write_u8(file, 187)?;
+      write_u16(file, *idx)
+    },
+    &Operation::newarray(ref array_type) => {
+      write_u8(file, 188)?;
+      write_u8(file, array_type.clone() as u8)
+    }
+  }
 }
 
 pub fn write(class: &JavaClass, output_file: &Path) -> io::Result<()> {

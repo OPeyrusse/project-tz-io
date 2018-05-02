@@ -51,5 +51,5 @@ pub struct Method {
   pub access: u16,
   pub name_index: u16,
   pub descriptor_index: u16,
-  pub attributes: Vec<Attribute>
+  pub attributes: Vec<(u16, Attribute)>
 }

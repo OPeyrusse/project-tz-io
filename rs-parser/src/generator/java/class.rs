@@ -104,7 +104,6 @@ impl ClassPool {
       .map(|(element, idx)| (idx, element))
       .collect();
     elements.sort_by(|a, b| a.0.cmp(b.0));
-    println!("elts {:?}", elements);
     ClassPoolIter { values: elements, idx: 0 }
   }
 }
@@ -116,7 +115,7 @@ pub struct JavaClass {
   pub class_id: PoolIdx,
   pub super_class_id: PoolIdx,
   pub interfaces: Vec<PoolIdx>,
-  methods: Vec<Method>
+  pub methods: Vec<Method>
 }
 
 impl JavaClass {
@@ -170,12 +169,15 @@ impl JavaClass {
     let name_idx = self.map_utf8_value(method_name);
     let descriptor = create_descriptor(&signature);
     let descriptor_idx = self.map_utf8_value(&descriptor);
+    let attr_idx = self.map_utf8_value(&"Code");
 
     self.methods.push(Method {
       access: access,
       name_index: name_idx,
       descriptor_index: descriptor_idx,
-      attributes: attributes
+      attributes: attributes.into_iter()
+        .map(|attr| (attr_idx, attr))
+        .collect()
     });
 
     name_idx

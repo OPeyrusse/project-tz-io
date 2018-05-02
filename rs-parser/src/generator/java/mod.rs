@@ -66,7 +66,7 @@ pub fn create_main_file(
   let mut output_file = output_dir.clone();
   output_file.push("Main");
   output_file.set_extension("class");
-  println!("class {:?}", class);
+  // println!("class {:?}", class);
   writer::write(&class, output_file.as_path())
     .map_err(|e| format!("Failed to write into file. Caused by {}", e))
 }
