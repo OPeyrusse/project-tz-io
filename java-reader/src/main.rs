@@ -1,46 +1,10 @@
+mod reader;
+
 use std::env;
 use std::io;
-use std::io::{BufReader, Read};
 use std::fs::File;
 
-type ReadResult = io::Result<()>;
-
-struct Reader {
-	buffer: BufReader<File>,
-	data_buffer: [u8; 100]
-}
-
-impl Reader {
-	pub fn new(file: File) -> Reader {
-		Reader {
-			buffer: BufReader::new(file),
-			data_buffer: [0; 100]
-		}
-	}
-
-	pub fn read_1u(&mut self) -> io::Result<&[u8]> {
-		self.buffer.read_exact(&mut self.data_buffer[0..1])?;
-		Ok(&self.data_buffer[0..1])
-	}
-
-	pub fn read_2u(&mut self) -> io::Result<&[u8]> {
-		self.buffer.read_exact(&mut self.data_buffer[0..2])?;
-		Ok(&self.data_buffer[0..2])
-	}
-
-	pub fn read_4u(&mut self) -> io::Result<&[u8]> {
-		self.buffer.read_exact(&mut self.data_buffer[0..4])?;
-		Ok(&self.data_buffer[0..4])
-	}
-
-	// fn read(&mut self, buffer: &mut [u8]) -> ReadResult {
-	// 	self.buffer.read_exact(&mut self.data_buffer[0..1])
-	// }
-}
-
-fn to_u16(bytes: &[u8]) -> u16 {
-	((bytes[0] as u16) << 8) | (bytes[1] as u16)
-}
+use reader::{Reader, ReadResult, to_u16};
 
 fn print_bytes(indent: u8, bytes: &[u8]) {
 	for _i in 0..indent {
@@ -48,6 +12,7 @@ fn print_bytes(indent: u8, bytes: &[u8]) {
 	}
 	for b in bytes {
 		match *b {
+			// Small fix as it is not possible to put trailing 0s in front of hexa
 			b @ 0 ... 9 => print!("0{:X} ", b),
 			_ => print!("{:X} ", b)
 		}
@@ -73,12 +38,25 @@ fn read_header(reader: &mut Reader) -> ReadResult {
 	Ok(())
 }
 
+fn read_class_pool(reader: &mut Reader) -> io::Result<()> {
+	let count: u16;
+	{ 
+		let bytes = reader.read_2u()?;
+		count = to_u16(bytes);
+		print_bytes(0, bytes);
+		println!("constant pool size = {}", count);
+	}
+
+	Ok(())
+}
+
 fn read_file(filename: &str) -> ReadResult {
 	println!("Reading {}", filename);
 	let f = File::open(filename).expect("file not found");
 	let mut reader = Reader::new(f);
 
 	read_header(&mut reader)?;
+	read_class_pool(&mut reader)?;
 
 	Ok(())
 }
