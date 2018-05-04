@@ -1,24 +1,12 @@
 mod reader;
+mod pool;
+mod printer;
 
 use std::env;
-use std::io;
 use std::fs::File;
+use printer::print_bytes;
 
 use reader::{Reader, ReadResult, to_u16};
-
-fn print_bytes(indent: u8, bytes: &[u8]) {
-	for _i in 0..indent {
-		print!("  ");
-	}
-	for b in bytes {
-		match *b {
-			// Small fix as it is not possible to put trailing 0s in front of hexa
-			b @ 0 ... 9 => print!("0{:X} ", b),
-			_ => print!("{:X} ", b)
-		}
-	}
-	print!("> ")
-}
 
 fn read_header(reader: &mut Reader) -> ReadResult {
 	{
@@ -38,25 +26,13 @@ fn read_header(reader: &mut Reader) -> ReadResult {
 	Ok(())
 }
 
-fn read_class_pool(reader: &mut Reader) -> io::Result<()> {
-	let count: u16;
-	{ 
-		let bytes = reader.read_2u()?;
-		count = to_u16(bytes);
-		print_bytes(0, bytes);
-		println!("constant pool size = {}", count);
-	}
-
-	Ok(())
-}
-
 fn read_file(filename: &str) -> ReadResult {
 	println!("Reading {}", filename);
 	let f = File::open(filename).expect("file not found");
 	let mut reader = Reader::new(f);
 
 	read_header(&mut reader)?;
-	read_class_pool(&mut reader)?;
+	let pool = pool::read_class_pool(&mut reader)?;
 
 	Ok(())
 }
