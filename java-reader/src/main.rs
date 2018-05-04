@@ -38,16 +38,47 @@ impl Reader {
 	// }
 }
 
+fn to_u16(bytes: &[u8]) -> u16 {
+	((bytes[0] as u16) << 8) | (bytes[1] as u16)
+}
+
+fn print_bytes(indent: u8, bytes: &[u8]) {
+	for _i in 0..indent {
+		print!("  ");
+	}
+	for b in bytes {
+		match *b {
+			b @ 0 ... 9 => print!("0{:X} ", b),
+			_ => print!("{:X} ", b)
+		}
+	}
+	print!("> ")
+}
+
+fn read_header(reader: &mut Reader) -> ReadResult {
+	{
+		let magic_number = reader.read_4u()?;
+		print_bytes(0, magic_number);
+		println!("magic number");
+	}
+
+	{
+		let versions = reader.read_4u()?;
+		print_bytes(0, versions);
+		let minor = to_u16(&versions[0..2]);
+		let major = to_u16(&versions[2..4]);
+		println!("version: {}.{}", major, minor);
+	}
+
+	Ok(())
+}
+
 fn read_file(filename: &str) -> ReadResult {
 	println!("Reading {}", filename);
-	let mut f = File::open(filename).expect("file not found");
+	let f = File::open(filename).expect("file not found");
 	let mut reader = Reader::new(f);
 
-	let magic_number = reader.read_4u()?;
-	for b in magic_number {
-		print!("{} ", b);
-	}
-	println!("magic number");
+	read_header(&mut reader)?;
 
 	Ok(())
 }
