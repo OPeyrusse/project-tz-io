@@ -49,19 +49,10 @@ fn read_integer(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
 }
 
 fn read_name_and_type(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
-  let name_idx: usize;
-  {
-    let bytes = reader.read_2u()?;
-    print_bytes(indent, bytes);
-    name_idx = to_u16(bytes) as usize;
-  }
-
-  let descriptor_idx: usize;
-  {
-    let bytes = reader.read_2u()?;
-    print_bytes(indent, bytes);
-    descriptor_idx = to_u16(bytes) as usize;
-  }
+  let bytes = reader.read_4u()?;
+  print_bytes(indent, bytes);
+  let name_idx = to_u16(&bytes[0..2]) as usize;
+  let descriptor_idx = to_u16(&bytes[2..4]) as usize;
 
   Ok(PoolElement::NameAndType(name_idx, descriptor_idx))
 }
