@@ -1,5 +1,5 @@
 use std::io;
-use reader::{Reader, to_u16};
+use reader::{Reader, to_u16, to_u32};
 use printer::print_bytes;
 use std::str::from_utf8;
 
@@ -7,6 +7,7 @@ use std::str::from_utf8;
 pub enum PoolElement {
   Utf8Value(String),
   ClassInfo(usize),
+  Integer(u32)
 }
 
 pub type PoolList = Vec<Option<PoolElement>>;
@@ -33,9 +34,17 @@ fn read_utf8_value(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
 fn read_class_info(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
   let bytes = reader.read_2u()?;
   print_bytes(indent, bytes);
-  
+
   let idx = to_u16(bytes);
   Ok(PoolElement::ClassInfo(idx as usize))
+}
+
+fn read_integer(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
+  let bytes = reader.read_4u()?;
+  print_bytes(indent, bytes);
+
+  let value = to_u32(bytes);
+  Ok(PoolElement::Integer(value))
 }
 
 fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
@@ -50,6 +59,10 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
     1 => {
       println!("Utf8 constant");
       read_utf8_value(reader, 2)?      
+    },
+    3 => {
+      println!("Integer constant");
+      read_integer(reader, 2)?
     },
     7 => {
       println!("Class info");
