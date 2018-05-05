@@ -7,7 +7,8 @@ use std::str::from_utf8;
 pub enum PoolElement {
   Utf8Value(String),
   ClassInfo(usize),
-  Integer(u32)
+  Integer(u32),
+  NameAndType(usize, usize)
 }
 
 pub type PoolList = Vec<Option<PoolElement>>;
@@ -47,6 +48,24 @@ fn read_integer(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
   Ok(PoolElement::Integer(value))
 }
 
+fn read_name_and_type(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
+  let name_idx: usize;
+  {
+    let bytes = reader.read_2u()?;
+    print_bytes(indent, bytes);
+    name_idx = to_u16(bytes) as usize;
+  }
+
+  let descriptor_idx: usize;
+  {
+    let bytes = reader.read_2u()?;
+    print_bytes(indent, bytes);
+    descriptor_idx = to_u16(bytes) as usize;
+  }
+
+  Ok(PoolElement::NameAndType(name_idx, descriptor_idx))
+}
+
 fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
   let pool_code: u8;
   {
@@ -68,6 +87,10 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
       println!("Class info");
       read_class_info(reader, 2)?  
     },
+    12 => {
+      println!("Name and type");
+      read_name_and_type(reader, 2)?  
+    }
     _ => panic!("Unsupported pool element. Code = {}", pool_code)
   };
   println!("{:?}", element);
