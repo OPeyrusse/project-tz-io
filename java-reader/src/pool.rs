@@ -8,7 +8,8 @@ pub enum PoolElement {
   Utf8Value(String),
   ClassInfo(usize),
   Integer(u32),
-  NameAndType(usize, usize)
+  NameAndType(usize, usize),
+  MethodRef(usize, usize)
 }
 
 pub type PoolList = Vec<Option<PoolElement>>;
@@ -57,6 +58,15 @@ fn read_name_and_type(reader: &mut Reader, indent: u8) -> io::Result<PoolElement
   Ok(PoolElement::NameAndType(name_idx, descriptor_idx))
 }
 
+fn read_method_ref(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
+  let bytes = reader.read_4u()?;
+  print_bytes(indent, bytes);
+  let class_idx = to_u16(&bytes[0..2]) as usize;
+  let name_and_type_idx = to_u16(&bytes[2..4]) as usize;
+
+  Ok(PoolElement::MethodRef(class_idx, name_and_type_idx))
+}
+
 fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
   let pool_code: u8;
   {
@@ -77,6 +87,10 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
     7 => {
       println!("Class info");
       read_class_info(reader, 2)?  
+    },
+    10 => {
+      println!("Method ref");
+      read_method_ref(reader, 2)?  
     },
     12 => {
       println!("Name and type");
