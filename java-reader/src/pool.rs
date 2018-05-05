@@ -5,10 +5,38 @@ use std::str::from_utf8;
 
 #[derive(Debug)]
 pub enum PoolElement {
-  Utf8Value(String)
+  Utf8Value(String),
+  ClassInfo(usize),
 }
 
 pub type PoolList = Vec<Option<PoolElement>>;
+
+fn read_utf8_value(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
+  let length: u16;
+  { 
+    let length_bytes = reader.read_2u()?;
+    print_bytes(indent, length_bytes);
+    length = to_u16(length_bytes);
+    println!("length {}", length);
+  }
+
+  let value: String;
+  { 
+    let content = reader.read_up_to_u16(length)?; 
+    print_bytes(indent, content);
+    value = String::from(from_utf8(content).expect("Invalid utf8 content"));
+  }
+  // TODO support the full string encoding
+  Ok(PoolElement::Utf8Value(value))
+}
+
+fn read_class_info(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
+  let bytes = reader.read_2u()?;
+  print_bytes(indent, bytes);
+  
+  let idx = to_u16(bytes);
+  Ok(PoolElement::ClassInfo(idx as usize))
+}
 
 fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
   let pool_code: u8;
@@ -21,23 +49,11 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
   let element = match pool_code {
     1 => {
       println!("Utf8 constant");
-
-      let length: u16;
-      { 
-        let length_bytes = reader.read_2u()?;
-        print_bytes(2, length_bytes);
-        length = to_u16(length_bytes);
-        println!("length {}", length);
-      }
-
-      let value: String;
-      { 
-        let content = reader.read_up_to_u16(length)?; 
-        print_bytes(2, content);
-        value = String::from(from_utf8(content).expect("Invalid utf8 content"));
-      }
-      // TODO support the full string encoding
-      PoolElement::Utf8Value(value)
+      read_utf8_value(reader, 2)?      
+    },
+    7 => {
+      println!("Class info");
+      read_class_info(reader, 2)?  
     },
     _ => panic!("Unsupported pool element. Code = {}", pool_code)
   };
