@@ -32,7 +32,7 @@ fn read_file(filename: &str) -> ReadResult {
 	let mut reader = Reader::new(f);
 
 	read_header(&mut reader)?;
-	let pool = pool::read_class_pool(&mut reader)?;
+	let _pool = pool::read_class_pool(&mut reader)?;
 
 	Ok(())
 }

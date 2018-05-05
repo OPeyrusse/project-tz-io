@@ -1,6 +1,7 @@
 use std::io;
 use reader::{Reader, to_u16};
 use printer::print_bytes;
+use std::str::from_utf8;
 
 #[derive(Debug)]
 pub enum PoolElement {
@@ -10,11 +11,38 @@ pub enum PoolElement {
 pub type PoolList = Vec<Option<PoolElement>>;
 
 fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
-  let entry_code = reader.read_1u()?;
-  print_bytes(1, entry_code);
+  let pool_code: u8;
+  {
+    let entry_code = reader.read_1u()?; 
+    print_bytes(1, entry_code);
+    pool_code = entry_code[0];
+  }
 
-  Ok(PoolElement::Utf8Value(
-        String::from("entry")))
+  let element = match pool_code {
+    1 => {
+      println!("Utf8 constant");
+
+      let length: u16;
+      { 
+        let length_bytes = reader.read_2u()?;
+        print_bytes(2, length_bytes);
+        length = to_u16(length_bytes);
+        println!("length {}", length);
+      }
+
+      let value: String;
+      { 
+        let content = reader.read_up_to_u16(length)?; 
+        print_bytes(2, content);
+        value = String::from(from_utf8(content).expect("Invalid utf8 content"));
+      }
+      // TODO support the full string encoding
+      PoolElement::Utf8Value(value)
+    },
+    _ => panic!("Unsupported pool element. Code = {}", pool_code)
+  };
+  println!("{:?}", element);
+  Ok(element)
 }
 
 pub fn read_class_pool(reader: &mut Reader) -> io::Result<PoolList> {

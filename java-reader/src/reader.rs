@@ -35,6 +35,16 @@ impl Reader {
 	// fn read(&mut self, buffer: &mut [u8]) -> ReadResult {
 	// 	self.buffer.read_exact(&mut self.data_buffer[0..1])
 	// }
+
+  pub fn read_up_to_u16(&mut self, length: u16) -> io::Result<&[u8]> {
+    if length <= 100 {
+      let end = length as usize;
+      self.buffer.read_exact(&mut self.data_buffer[0..end])?;
+      Ok(&self.data_buffer[0..end])
+    } else {
+      panic!("Not supporting read > 100 chars yet. Asked: {}", length);
+    }
+  }
 }
 
 pub fn to_u16(bytes: &[u8]) -> u16 {
