@@ -1,12 +1,17 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod reader;
 mod pool;
 mod printer;
+mod flags;
 
 use std::env;
 use std::fs::File;
 use printer::print_bytes;
 
 use reader::{Reader, ReadResult, to_u16};
+use flags::read_access;
 
 fn read_header(reader: &mut Reader) -> ReadResult {
 	{
@@ -33,6 +38,7 @@ fn read_file(filename: &str) -> ReadResult {
 
 	read_header(&mut reader)?;
 	let _pool = pool::read_class_pool(&mut reader)?;
+	read_access(&mut reader)?;
 
 	Ok(())
 }
