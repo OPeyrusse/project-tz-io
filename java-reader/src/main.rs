@@ -4,6 +4,7 @@ extern crate lazy_static;
 mod flags;
 mod fields;
 mod inheritance;
+mod methods;
 mod pool;
 mod printer;
 mod reader;
@@ -40,7 +41,8 @@ fn read_file(filename: &str) -> ReadResult {
 	read_header(&mut reader)?;
 	let pool = pool::read_class_pool(&mut reader)?;
 	inheritance::read(&mut reader, &pool)?;
-	fields::read(&mut reader)
+	fields::read(&mut reader)?;
+	methods::read(&mut reader, &pool)
 }
 
 fn main() {

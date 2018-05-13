@@ -1,9 +1,24 @@
 use std::io;
 
-use flags::read_access;
+use flags::to_class_access;
 use pool::{PoolList, resolve_utf8_value};
 use printer::print_bytes;
 use reader::{Reader, ReadResult, to_u16};
+
+pub fn read_class_access(reader: &mut Reader, indent: u8) -> ReadResult {
+	let bytes = reader.read_2u()?;
+	let flag_value = to_u16(bytes);
+	let flags = to_class_access(flag_value);
+
+	print_bytes(indent, bytes);
+	print!("Flags:");
+	for flag in &flags {
+		print!(" {}", flag);
+	}
+	println!("");
+
+	Ok(())
+}
 
 fn read_class_name<'a>(reader: &'a mut Reader, pool: &'a PoolList) -> io::Result<(&'a [u8], Option<&'a str>)> {
 	let bytes = reader.read_2u()?;
@@ -54,7 +69,7 @@ fn read_interfaces(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResu
 }
 
 pub fn read(reader: &mut Reader, pool: &PoolList) -> ReadResult {
-	read_access(reader)?;
+	read_class_access(reader, 0)?;
 	read_class(reader, pool, 0)?;
 	read_super_class(reader, pool, 1)?;
 	read_interfaces(reader, pool, 1)

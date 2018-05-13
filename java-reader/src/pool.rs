@@ -67,7 +67,7 @@ fn read_method_ref(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
   Ok(PoolElement::MethodRef(class_idx, name_and_type_idx))
 }
 
-fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
+fn read_entry(reader: &mut Reader, index: u16) -> io::Result<PoolElement> {
   let pool_code: u8;
   {
     let entry_code = reader.read_1u()?;
@@ -75,6 +75,7 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
     pool_code = entry_code[0];
   }
 
+  print!("#{} ", index);
   let element = match pool_code {
     1 => {
       println!("Utf8 constant");
@@ -112,8 +113,8 @@ pub fn read_class_pool(reader: &mut Reader) -> io::Result<PoolList> {
 	}
 
 	let mut entries = vec![None];
-	for _i in 1..count {
-    let entry = read_entry(reader)?;
+	for i in 1..count {
+    let entry = read_entry(reader, i)?;
     entries.push(Some(entry));
 	}
 
@@ -123,6 +124,7 @@ pub fn read_class_pool(reader: &mut Reader) -> io::Result<PoolList> {
 pub fn resolve_utf8_value<'a>(pool: &'a PoolList, index: usize) -> Option<&'a str> {
 	if let &Some(ref entry) = &pool[index] {
 		match entry {
+      &PoolElement::Utf8Value(ref value) => Some(value),
       &PoolElement::ClassInfo(idx) => {
         let class_entry = &pool[idx];
         if let &Some(PoolElement::Utf8Value(ref value)) = class_entry {
