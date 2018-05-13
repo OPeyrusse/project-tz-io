@@ -1,11 +1,12 @@
 #[macro_use]
 extern crate lazy_static;
 
-mod reader;
+mod flags;
+mod fields;
+mod inheritance;
 mod pool;
 mod printer;
-mod flags;
-mod inheritance;
+mod reader;
 
 use std::env;
 use std::fs::File;
@@ -38,7 +39,8 @@ fn read_file(filename: &str) -> ReadResult {
 
 	read_header(&mut reader)?;
 	let pool = pool::read_class_pool(&mut reader)?;
-	inheritance::read(&mut reader, &pool)
+	inheritance::read(&mut reader, &pool)?;
+	fields::read(&mut reader)
 }
 
 fn main() {
