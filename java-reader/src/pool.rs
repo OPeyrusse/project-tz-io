@@ -16,7 +16,7 @@ pub type PoolList = Vec<Option<PoolElement>>;
 
 fn read_utf8_value(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
   let length: u16;
-  { 
+  {
     let length_bytes = reader.read_2u()?;
     print_bytes(indent, length_bytes);
     length = to_u16(length_bytes);
@@ -24,8 +24,8 @@ fn read_utf8_value(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
   }
 
   let value: String;
-  { 
-    let content = reader.read_up_to_u16(length)?; 
+  {
+    let content = reader.read_up_to_u16(length)?;
     print_bytes(indent, content);
     value = String::from(from_utf8(content).expect("Invalid utf8 content"));
   }
@@ -70,7 +70,7 @@ fn read_method_ref(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
 fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
   let pool_code: u8;
   {
-    let entry_code = reader.read_1u()?; 
+    let entry_code = reader.read_1u()?;
     print_bytes(1, entry_code);
     pool_code = entry_code[0];
   }
@@ -78,7 +78,7 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
   let element = match pool_code {
     1 => {
       println!("Utf8 constant");
-      read_utf8_value(reader, 2)?      
+      read_utf8_value(reader, 2)?
     },
     3 => {
       println!("Integer constant");
@@ -86,15 +86,15 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
     },
     7 => {
       println!("Class info");
-      read_class_info(reader, 2)?  
+      read_class_info(reader, 2)?
     },
     10 => {
       println!("Method ref");
-      read_method_ref(reader, 2)?  
+      read_method_ref(reader, 2)?
     },
     12 => {
       println!("Name and type");
-      read_name_and_type(reader, 2)?  
+      read_name_and_type(reader, 2)?
     }
     _ => panic!("Unsupported pool element. Code = {}", pool_code)
   };
@@ -104,7 +104,7 @@ fn read_entry(reader: &mut Reader) -> io::Result<PoolElement> {
 
 pub fn read_class_pool(reader: &mut Reader) -> io::Result<PoolList> {
 	let count: u16;
-	{ 
+	{
 		let bytes = reader.read_2u()?;
 		count = to_u16(bytes);
 		print_bytes(0, bytes);
@@ -118,4 +118,22 @@ pub fn read_class_pool(reader: &mut Reader) -> io::Result<PoolList> {
 	}
 
 	Ok(entries)
+}
+
+pub fn resolve_utf8_value<'a>(pool: &'a PoolList, index: usize) -> Option<&'a str> {
+	if let &Some(ref entry) = &pool[index] {
+		match entry {
+      &PoolElement::ClassInfo(idx) => {
+        let class_entry = &pool[idx];
+        if let &Some(PoolElement::Utf8Value(ref value)) = class_entry {
+          Some(value)
+        } else {
+          panic!("Invalid index into pool: {:?}", class_entry);
+        }
+      },
+      _ => None
+    }
+	} else {
+		None
+	}
 }

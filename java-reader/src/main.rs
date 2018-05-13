@@ -5,13 +5,13 @@ mod reader;
 mod pool;
 mod printer;
 mod flags;
+mod inheritance;
 
 use std::env;
 use std::fs::File;
 use printer::print_bytes;
 
 use reader::{Reader, ReadResult, to_u16};
-use flags::read_access;
 
 fn read_header(reader: &mut Reader) -> ReadResult {
 	{
@@ -37,10 +37,8 @@ fn read_file(filename: &str) -> ReadResult {
 	let mut reader = Reader::new(f);
 
 	read_header(&mut reader)?;
-	let _pool = pool::read_class_pool(&mut reader)?;
-	read_access(&mut reader)?;
-
-	Ok(())
+	let pool = pool::read_class_pool(&mut reader)?;
+	inheritance::read(&mut reader, &pool)
 }
 
 fn main() {
