@@ -34,10 +34,7 @@ fn read_class_info(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
 }
 
 fn read_integer(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
-  let bytes = reader.read_4u()?;
-  print_bytes(indent, bytes);
-
-  let value = to_u32(bytes);
+  read_u32!(value, reader, indent);
   Ok(PoolElement::Integer(value))
 }
 

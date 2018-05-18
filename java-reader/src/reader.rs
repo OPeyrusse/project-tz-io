@@ -32,18 +32,38 @@ impl Reader {
 		Ok(&self.data_buffer[0..4])
 	}
 
-	// fn read(&mut self, buffer: &mut [u8]) -> ReadResult {
-	// 	self.buffer.read_exact(&mut self.data_buffer[0..1])
-	// }
+	pub fn read(&mut self, buffer: &mut [u8]) -> ReadResult {
+		Self::read_buffer(&mut self.buffer, buffer)
+	}
 
   pub fn read_up_to_u16(&mut self, length: u16) -> io::Result<&[u8]> {
     if length <= 100 {
       let end = length as usize;
-      self.buffer.read_exact(&mut self.data_buffer[0..end])?;
+      Self::read_buffer(&mut self.buffer, &mut self.data_buffer[0..end])?;
       Ok(&self.data_buffer[0..end])
     } else {
       panic!("Not supporting read > 100 chars yet. Asked: {}", length);
     }
+  }
+
+  fn read_buffer(reader: &mut BufReader<File>, buffer: &mut [u8]) -> ReadResult {
+    // reader.read_exact(buffer)
+    let mut remaining = buffer.len();
+    let mut start = 0;
+    while remaining > 0 {
+      let read = reader.read(&mut buffer[start..])?;
+      if read > 0 {
+        if read <= remaining {
+          remaining -= read;
+          start += read;
+        } else {
+          panic!("Too much bytes read.");
+        }
+      } else {
+        panic!("Cannot read more than {} bytes, but asking for {}", start, buffer.len());
+      }
+    }
+    Ok(())
   }
 }
 
@@ -59,13 +79,25 @@ pub fn to_u32(bytes: &[u8]) -> u32 {
 }
 
 macro_rules! read_u16 {
-	($result: ident, $reader: tt, $indent:tt) => {
+	($result: ident, $reader: tt, $indent:expr) => {
 		let $result: u16;
     {
       let bytes = $reader.read_2u()?;
       print_bytes($indent, bytes);
 
       $result = to_u16(bytes);
+    }
+	};
+}
+
+macro_rules! read_u32 {
+	($result: ident, $reader: tt, $indent:expr) => {
+		let $result: u32;
+    {
+      let bytes = $reader.read_4u()?;
+      print_bytes($indent, bytes);
+
+      $result = to_u32(bytes);
     }
 	};
 }
