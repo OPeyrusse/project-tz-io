@@ -1,13 +1,17 @@
 #[macro_use]
 extern crate lazy_static;
 
+// Macros first
+#[macro_use]
+mod reader;
+// Other modules after that 
+mod attributes;
 mod flags;
 mod fields;
 mod inheritance;
 mod methods;
 mod pool;
 mod printer;
-mod reader;
 
 use std::env;
 use std::fs::File;

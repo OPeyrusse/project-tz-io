@@ -15,13 +15,8 @@ pub enum PoolElement {
 pub type PoolList = Vec<Option<PoolElement>>;
 
 fn read_utf8_value(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
-  let length: u16;
-  {
-    let length_bytes = reader.read_2u()?;
-    print_bytes(indent, length_bytes);
-    length = to_u16(length_bytes);
-    println!("length {}", length);
-  }
+  read_u16!(length, reader, indent);
+  println!("length {}", length);
 
   let value: String;
   {
@@ -34,10 +29,7 @@ fn read_utf8_value(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
 }
 
 fn read_class_info(reader: &mut Reader, indent: u8) -> io::Result<PoolElement> {
-  let bytes = reader.read_2u()?;
-  print_bytes(indent, bytes);
-
-  let idx = to_u16(bytes);
+  read_u16!(idx, reader, indent);
   Ok(PoolElement::ClassInfo(idx as usize))
 }
 
@@ -104,13 +96,8 @@ fn read_entry(reader: &mut Reader, index: u16) -> io::Result<PoolElement> {
 }
 
 pub fn read_class_pool(reader: &mut Reader) -> io::Result<PoolList> {
-	let count: u16;
-	{
-		let bytes = reader.read_2u()?;
-		count = to_u16(bytes);
-		print_bytes(0, bytes);
-		println!("constant pool size = {}", count);
-	}
+  read_u16!(count, reader, 0);
+  println!("constant pool size = {}", count);
 
 	let mut entries = vec![None];
 	for i in 1..count {

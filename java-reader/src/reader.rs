@@ -57,3 +57,15 @@ pub fn to_u32(bytes: &[u8]) -> u32 {
 	  | ((bytes[2] as u32) << 8) 
     | (bytes[3] as u32)
 }
+
+macro_rules! read_u16 {
+	($result: ident, $reader: tt, $indent:tt) => {
+		let $result: u16;
+    {
+      let bytes = $reader.read_2u()?;
+      print_bytes($indent, bytes);
+
+      $result = to_u16(bytes);
+    }
+	};
+}
