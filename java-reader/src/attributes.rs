@@ -21,5 +21,8 @@ pub fn read(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
 
 fn read_code(reader: &mut Reader, pool: &PoolList, length: u32, indent: u8) -> ReadResult {
   let mut bytes = vec![0; length as usize];
-  reader.read(&mut bytes[..])
+  reader.read(&mut bytes[..])?;
+  print_bytes(indent, &bytes[..]);
+  println!("Read: {}", length);
+  Ok(())
 }

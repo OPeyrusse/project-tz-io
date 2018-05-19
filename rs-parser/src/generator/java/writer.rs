@@ -195,12 +195,13 @@ fn write_attribute(writer: &mut Writer, &(ref idx, ref attribute): &(u16, Attrib
       write_u32(&mut attr_writer, op_writer.data.len() as u32)?;
       attr_writer.write(&op_writer.data[..])?;
 
-      write_u32(writer, attr_writer.data.len() as u32)?;
-      writer.write(&attr_writer.data[..])?;
-
       // Not used so far
-      write_u16(writer, 0)?; // No exception tables
-      write_u16(writer, 0) // No attributes
+      write_u16(&mut attr_writer, 0)?; // No exception tables
+      write_u16(&mut attr_writer, 0)?; // No attributes
+
+      write_u32(writer, attr_writer.data.len() as u32)?;
+      println!("code len {}", attr_writer.data.len());
+      writer.write(&attr_writer.data[..])
     }
   }
 }
