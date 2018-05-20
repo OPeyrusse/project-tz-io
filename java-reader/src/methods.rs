@@ -2,7 +2,7 @@ use flags::to_method_access;
 use pool::{PoolList, resolve_utf8_value};
 use printer::print_bytes;
 use reader::{Reader, ReadResult, to_u16};
-use attributes::read as read_attribute;
+use attributes::read as read_attributes;
 
 fn read_access(reader: &mut Reader, indent: u8) -> ReadResult {
 	read_u16!(flag_value, reader, indent);
@@ -37,16 +37,6 @@ fn read_descriptor(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResu
 
 	println!("Descriptor '{}'", method_name);
 
-	Ok(())
-}
-
-fn read_attributes(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
-	read_u16!(count, reader, indent);
-	println!("Attribute count = {}", count);
-
-	for _i in 0..count { 
-		read_attribute(reader, pool, indent)?;
-	}
 	Ok(())
 }
 

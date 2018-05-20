@@ -46,7 +46,8 @@ fn read_file(filename: &str) -> ReadResult {
 	let pool = pool::read_class_pool(&mut reader)?;
 	inheritance::read(&mut reader, &pool)?;
 	fields::read(&mut reader)?;
-	methods::read(&mut reader, &pool)
+	methods::read(&mut reader, &pool)?;
+	attributes::read(&mut reader, &pool, 0)
 }
 
 fn main() {

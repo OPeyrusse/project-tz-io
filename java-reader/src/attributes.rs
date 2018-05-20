@@ -3,6 +3,16 @@ use printer::print_bytes;
 use reader::{Reader, ReadResult, to_u16, to_u32};
 
 pub fn read(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
+	read_u16!(count, reader, indent);
+	println!("Attribute count = {}", count);
+
+	for _i in 0..count { 
+		read_attribute(reader, pool, indent)?;
+	}
+	Ok(())
+}
+
+pub fn read_attribute(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
   read_u16!(attribute_idx, reader, indent);
   let attribute_name = resolve_utf8_value(pool, attribute_idx as usize)
     .expect(&format!(
