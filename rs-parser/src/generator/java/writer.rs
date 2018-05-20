@@ -200,7 +200,6 @@ fn write_attribute(writer: &mut Writer, &(ref idx, ref attribute): &(u16, Attrib
       write_u16(&mut attr_writer, 0)?; // No attributes
 
       write_u32(writer, attr_writer.data.len() as u32)?;
-      println!("code len {}", attr_writer.data.len());
       writer.write(&attr_writer.data[..])
     }
   }
