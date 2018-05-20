@@ -1,6 +1,6 @@
 use pool::{PoolList, resolve_utf8_value};
 use printer::print_bytes;
-use reader::{Reader, ReadResult, to_u16, to_u32};
+use reader::{Reader, ByteReader, ReadResult, to_u16, to_u32};
 
 pub fn read(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
 	read_u16!(count, reader, indent);
@@ -23,16 +23,49 @@ pub fn read_attribute(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadR
   read_u32!(length, reader, indent + 1);
   println!("Attribute length = {}", length);
 
+  let mut bytes = vec![0; length as usize];
+  reader.read(&mut bytes[..])?;
+
+  let mut attribute_reader = ByteReader::new(&bytes);
   match attribute_name {
-    "Code" => read_code(reader, pool, length, indent),
+    "Code" => read_code(&mut attribute_reader, pool, indent + 1),
     _ => panic!("Unsupported attribute '{}'", attribute_name)
   }
 }
 
-fn read_code(reader: &mut Reader, pool: &PoolList, length: u32, indent: u8) -> ReadResult {
-  let mut bytes = vec![0; length as usize];
-  reader.read(&mut bytes[..])?;
-  print_bytes(indent, &bytes[..]);
-  println!("Read: {}", length);
+fn read_code(reader: &mut ByteReader, pool: &PoolList, indent: u8) -> ReadResult {
+  read_u16!(max_stack, reader, indent);
+  println!("Max stack = {}", max_stack);
+
+  read_u16!(max_locals, reader, indent);
+  println!("Max local vars = {}", max_locals);
+
+  read_u32!(code_length, reader, indent);
+  println!("Code length = {}", code_length);
+
+  {
+    let code_bytes = reader.get_slice(code_length as usize)?;
+    print_bytes(indent + 1, code_bytes);
+    println!("Read {}", code_length);
+    let mut code_reader = ByteReader::new(&code_bytes);
+    read_operations(&mut code_reader, pool, indent + 1)?;
+  }
+
+  read_u16!(exception_length, reader, indent);
+  println!("Exception table length = {}", exception_length);
+  if exception_length > 0 {
+    panic!("No support for exception table");
+  }
+
+  read(reader, pool, indent)
+}
+
+fn read_operations(
+    reader: &mut ByteReader, 
+    pool: &PoolList,
+    indent: u8) -> ReadResult {
+  while !reader.is_empty() {
+    read_u8!(operation_code, reader, indent);
+  }
   Ok(())
 }

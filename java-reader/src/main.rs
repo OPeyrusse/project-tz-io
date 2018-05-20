@@ -17,7 +17,7 @@ use std::env;
 use std::fs::File;
 use printer::print_bytes;
 
-use reader::{Reader, ReadResult, to_u16};
+use reader::{Reader, FileReader, ReadResult, to_u16};
 
 fn read_header(reader: &mut Reader) -> ReadResult {
 	{
@@ -40,7 +40,7 @@ fn read_header(reader: &mut Reader) -> ReadResult {
 fn read_file(filename: &str) -> ReadResult {
 	println!("Reading {}", filename);
 	let f = File::open(filename).expect("file not found");
-	let mut reader = Reader::new(f);
+	let mut reader = FileReader::new(f);
 
 	read_header(&mut reader)?;
 	let pool = pool::read_class_pool(&mut reader)?;
