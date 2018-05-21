@@ -123,3 +123,16 @@ pub fn resolve_utf8_value<'a>(pool: &'a PoolList, index: usize) -> Option<&'a st
 		None
 	}
 }
+
+pub fn resolve_method_name<'a>(pool: &'a PoolList, index: usize) -> Option<(&'a str, &'a str)> {
+  println!("item #{} = {:?}", index, &pool[index]);
+	if let &Some(PoolElement::MethodRef(ref name_idx, ref descriptor_idx)) = &pool[index] {
+    let name = resolve_utf8_value(pool, *name_idx)
+      .expect(&format!("No method name at {}", name_idx));
+    let descriptor = resolve_utf8_value(pool, *descriptor_idx)
+      .expect(&format!("No descriptor string at {}", descriptor_idx));
+    Some((name, descriptor))
+	} else {
+		None
+	}
+}

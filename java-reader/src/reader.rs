@@ -95,7 +95,7 @@ impl <'a> ByteReader<'a> {
   }
 
   pub fn is_empty(&self) -> bool {
-    self.bytes.len() > self.position
+    self.bytes.len() <= self.position
   }
 
   pub fn get_slice(&mut self, length: usize) -> io::Result<&[u8]> {

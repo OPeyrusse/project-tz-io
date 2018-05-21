@@ -1,6 +1,7 @@
 use pool::{PoolList, resolve_utf8_value};
 use printer::print_bytes;
 use reader::{Reader, ByteReader, ReadResult, to_u16, to_u32};
+use operations;
 
 pub fn read(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
 	read_u16!(count, reader, indent);
@@ -45,10 +46,8 @@ fn read_code(reader: &mut ByteReader, pool: &PoolList, indent: u8) -> ReadResult
 
   {
     let code_bytes = reader.get_slice(code_length as usize)?;
-    print_bytes(indent + 1, code_bytes);
-    println!("Read {}", code_length);
     let mut code_reader = ByteReader::new(&code_bytes);
-    read_operations(&mut code_reader, pool, indent + 1)?;
+    operations::read(&mut code_reader, pool, indent + 1)?;
   }
 
   read_u16!(exception_length, reader, indent);
@@ -58,14 +57,4 @@ fn read_code(reader: &mut ByteReader, pool: &PoolList, indent: u8) -> ReadResult
   }
 
   read(reader, pool, indent)
-}
-
-fn read_operations(
-    reader: &mut ByteReader, 
-    pool: &PoolList,
-    indent: u8) -> ReadResult {
-  while !reader.is_empty() {
-    read_u8!(operation_code, reader, indent);
-  }
-  Ok(())
 }

@@ -10,8 +10,10 @@ mod flags;
 mod fields;
 mod inheritance;
 mod methods;
+mod operations;
 mod pool;
 mod printer;
+mod types;
 
 use std::env;
 use std::fs::File;
