@@ -219,7 +219,7 @@ impl JavaClass {
     self.map_utf8_value(&descriptor)
   }
 
-  fn map_utf8_value(&mut self, value: &str) -> PoolIdx {
+  pub fn map_utf8_value(&mut self, value: &str) -> PoolIdx {
     let info = PoolElement::Utf8Value(String::from(value));
     self.class_pool.map(info)
   }

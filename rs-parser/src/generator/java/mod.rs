@@ -66,26 +66,39 @@ pub fn create_main_file(
   let mut output_file = output_dir.clone();
   output_file.push("Main");
   output_file.set_extension("class");
-  // println!("class {:?}", class);
   writer::write(&class, output_file.as_path())
     .map_err(|e| format!("Failed to write into file. Caused by {}", e))
 }
 
 fn create_node_definition_method(
     i: usize,
-    _node: &NodeBlock,
+    node: &NodeBlock,
     class: &mut class::JavaClass) -> class::PoolIdx {
+  let add_node_idx = class.map_method(
+    &TZ_ENV_CLASS_NAME, 
+    "addNode", 
+    &constructs::Signature {
+      return_type: constants::Type::Object(String::from(TZ_ENV_CLASS_NAME)),
+      parameter_types: vec![
+        constants::Type::Object(String::from("java/lang/String")),
+        constants::Type::Integer,
+        constants::Type::PrimitiveArray(1, constants::ArrayType::INT),
+        constants::Type::PrimitiveArray(1, constants::ArrayType::INT),
+        constants::Type::Object(String::from("java/util/List"))
+      ]
+    });
+  
   let signature = constructs::Signature {
     return_type: constants::Type::Void,
     parameter_types: vec![]
   };
   
-  let add_node_idx = 0; // TODO reference the addNode method
+  let node_name = class.map_utf8_value(&node.0.get_id());
   let create_input_array = create_int_array(class, &vec![0, 1], 1);
   let create_output_array = create_int_array(class, &vec![1, 2], 2);
   let call_to_add_node = vec![
     constructs::Operation::aload(0),
-    // Push the name of the node
+    constructs::Operation::ldc(node_name),
     constructs::Operation::iconst_1,
     constructs::Operation::aload(1),
     constructs::Operation::aload(2),
