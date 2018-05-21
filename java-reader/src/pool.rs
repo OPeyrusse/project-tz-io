@@ -124,14 +124,25 @@ pub fn resolve_utf8_value<'a>(pool: &'a PoolList, index: usize) -> Option<&'a st
 	}
 }
 
-pub fn resolve_method_name<'a>(pool: &'a PoolList, index: usize) -> Option<(&'a str, &'a str)> {
-  println!("item #{} = {:?}", index, &pool[index]);
-	if let &Some(PoolElement::MethodRef(ref name_idx, ref descriptor_idx)) = &pool[index] {
+fn resolve_name_and_type<'a>(pool: &'a PoolList, index: usize) -> Option<(&'a str, &'a str)> {
+	if let &Some(PoolElement::NameAndType(ref name_idx, ref descriptor_idx)) = &pool[index] {
     let name = resolve_utf8_value(pool, *name_idx)
       .expect(&format!("No method name at {}", name_idx));
     let descriptor = resolve_utf8_value(pool, *descriptor_idx)
       .expect(&format!("No descriptor string at {}", descriptor_idx));
     Some((name, descriptor))
+	} else {
+		None
+	}
+}
+
+pub fn resolve_method_name<'a>(pool: &'a PoolList, index: usize) -> Option<(&'a str, &'a str, &'a str)> {
+	if let &Some(PoolElement::MethodRef(ref class_name_idx, ref name_type_idx)) = &pool[index] {
+    let class_name = resolve_utf8_value(pool, *class_name_idx)
+      .expect(&format!("No method name at {}", class_name_idx));
+    let name_type = resolve_name_and_type(pool, *name_type_idx)
+      .expect(&format!("No name & type at {}", name_type_idx));
+    Some((class_name, name_type.0, name_type.1))
 	} else {
 		None
 	}

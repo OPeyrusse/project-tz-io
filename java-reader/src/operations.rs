@@ -15,11 +15,13 @@ pub fn read(
     read_u8!(operation_code, reader, indent);
     match operation_code {
       2 ... 8 => read_iconst(operation_code),
+      11 ... 13 => read_fconst(operation_code),
       18 => read_ldc(reader, indent)?,
       25 => read_aload(reader, indent)?,
       58 => read_astore(reader, indent)?,
       79 => read_iastore(),
       182 => read_invoke_virtual(reader, pool, indent)?,
+      183 => read_invoke_special(reader, pool, indent)?,
       188 => read_new_array(reader, indent)?,
       _ => panic!("Unsupported operation: {}", operation_code)
     }
@@ -47,23 +49,37 @@ fn read_iastore() {
   print_op("iastore");
 }
 
+fn read_fconst(operation: u8) {
+  let num = operation as i8 - 11;
+  match num {
+    0 ... 2 => print_op(&format!("fconst_{}", num)),
+    _ => panic!("Invalid float constant opcode {}", num)
+  }
+}
+
 fn read_iconst(operation: u8) {
   let num = operation as i8 - 3;
   match num {
     -1 => print_op("iconst_m1"),
     0 ... 5 => print_op(&format!("iconst_{}", num)),
-    _ => panic!("Invalid constant value {}", num)
+    _ => panic!("Invalid integer constant opcode {}", num)
   }
 }
 
-fn read_invoke_virtual(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
-  print_op("invokevirtual");
-  read_u16!(method_idx, reader, indent);
-  let (ref method_name, ref descriptor) = resolve_method_name(pool, method_idx as usize)
-    .expect(&format!("No method reference in pool at {}", method_idx));
-  println!("Invoke #{} = {}{}", method_idx, method_name, descriptor);
-  Ok(())
+macro_rules! read_invoke {
+  ($method_name: ident, $name: expr) => {
+    fn $method_name(reader: &mut Reader, pool: &PoolList, indent: u8) -> ReadResult {
+      print_op($name);
+      read_u16!(method_idx, reader, indent + 1);
+      let (ref class_name, ref method_name, ref descriptor) = resolve_method_name(pool, method_idx as usize)
+        .expect(&format!("No method reference in pool at {}", method_idx));
+      println!("Invoke #{} = {}.{}:{}", method_idx, class_name, method_name, descriptor);
+      Ok(())
+    }
+  };
 }
+read_invoke!(read_invoke_virtual, "invokevirtual");
+read_invoke!(read_invoke_special, "invokespecial");
 
 fn read_new_array(reader: &mut Reader, indent: u8) -> ReadResult {
   print_op("newarray");
