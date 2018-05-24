@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::cmp::Eq;
 use generator::java::constructs::{
   Attribute,
@@ -9,6 +8,7 @@ use generator::java::constants::{
   ArrayType,
   Type
 };
+use generator::java::dictionary::{Dictionary, DictionaryIter};
 
 pub type PoolIdx = u16;
 
@@ -40,73 +40,7 @@ pub enum PoolElement {
 
 impl Eq for PoolElement {}
 
-#[derive(Debug)]
-struct ClassPool {
-  pool: HashMap<PoolElement, PoolIdx>,
-  next_idx: PoolIdx
-}
-
-pub struct ClassPoolIter<'a> {
-  values: Vec<(&'a PoolIdx, &'a PoolElement)>,
-  idx: usize
-}
-
-impl<'a> Iterator for ClassPoolIter<'a> {
-  type Item = (&'a PoolIdx, &'a PoolElement);
-
-  fn next(&mut self) -> Option<Self::Item> {
-    if self.idx < self.values.len() {
-      let i = self.idx;
-      self.idx += 1;
-      Some(self.values[i])
-    } else {
-      None
-    }
-  }
-}
-
-impl ClassPool {
-  fn new() -> ClassPool {
-    ClassPool { 
-      pool: HashMap::new(),
-      next_idx: 1
-    }
-  }
-
-  pub fn get(&self, idx: &PoolIdx) -> Option<&PoolElement> {
-    for (element, i) in self.pool.iter() {
-      if *i == *idx {
-        return Some(element);
-      }
-    }
-    None
-  }
-
-  pub fn map(&mut self, element: PoolElement) -> PoolIdx {
-    let mut new_idx = Some(self.next_idx);
-    let entry = self.pool.entry(element).or_insert_with(|| {
-      let idx = new_idx.unwrap();
-      new_idx = None;
-      idx
-    });
-    if new_idx.is_none() {
-      self.next_idx += 1;
-    }
-    *entry
-  }
-
-  pub fn size(&self) -> PoolIdx {
-    self.next_idx
-  }
-
-  pub fn iter<'a>(&'a self) -> ClassPoolIter<'a> {
-    let mut elements: Vec<(&PoolIdx, &PoolElement)> = self.pool.iter()
-      .map(|(element, idx)| (idx, element))
-      .collect();
-    elements.sort_by(|a, b| a.0.cmp(b.0));
-    ClassPoolIter { values: elements, idx: 0 }
-  }
-}
+type ClassPool = Dictionary<PoolElement>;
 
 #[derive(Debug)]
 pub struct JavaClass {
@@ -227,7 +161,7 @@ impl JavaClass {
   /// Gets an iterator on all elements of the class pool
   /// 
   /// Elements are enumrated by increasing pool idx.
-  pub fn pool_iter<'a>(&'a self) -> ClassPoolIter<'a> {
+  pub fn pool_iter<'a>(&'a self) -> DictionaryIter<'a, PoolElement> {
     self.class_pool.iter()
   }
 

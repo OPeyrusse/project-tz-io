@@ -13,7 +13,8 @@ pub enum Operation {
   // aaload,
   /// Push the value into an array at a given index
   // aastore,
-  /// Lods a reference of a local variable into the stack
+  
+  /// Loads a reference of a local variable into the stack
   /// Structure
   /// ```
   ///  1. Index of the local variable
